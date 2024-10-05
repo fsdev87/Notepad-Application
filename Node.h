@@ -5,9 +5,11 @@ struct Node {
 	Node* down;
 	Node* left;
 	Node* right;
+	bool createdByEnter;
 
-	Node(char value) {
+	Node(char value, bool createdByEnter = false) {
 		this->value = value;
+		this->createdByEnter = createdByEnter;
 		up = down = left = right = nullptr;
 	}
 };

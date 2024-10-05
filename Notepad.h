@@ -278,7 +278,7 @@ public:
 		}
 		cursorX = 1, cursorY++;
 		Node* rowHead = getLineHead(cursor);
-		Node* newNode = new Node('\0');
+		Node* newNode = new Node('\0', true);
 
 		// this part was about adding the node either at end of list or in between
 		if (!rowHead->down) {
