@@ -1,0 +1,8 @@
+# Folders
+codes/
+x64/
+
+# Solution Files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
