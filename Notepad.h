@@ -333,13 +333,36 @@ public:
 		// this part is about checking if the new line is going to be empty or filled with rest
 		// of previous line
 		if (cursor->right) {
+			/*
+				here we need to implement logic for joining the whole line till it is not created
+				by enter to the new line
+			*/
 			cursor = cursor->right;
 			cursor->left->right = nullptr;
 			newNode->right = cursor;
 			cursor->left = newNode;
+			Node* current = newNode, * row = newNode;
+			Node* temp = newNode;
+			while (row->down && !row->down->createdByEnter) {
+				// move current to end of current line
+				while (current->right) {
+					current = current->right;
+				}
+				current->right = row->down->right;
+				if (row->down->right) {
+					row->down->right->left = current;
+				}
+				temp = row->down;
+				row->down = temp->down;
+				if (temp->down) {
+					temp->down->up = row;
+				}
+				delete temp;
+			}
 		}
 		cursor = newNode; // move to new line
-
+		wrapList();
+		locateCursor();
 		makeLinks(head);
 	}
 
