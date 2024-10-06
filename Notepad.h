@@ -26,6 +26,25 @@ public:
 		cursorX = 1, cursorY = 0;
 	}
 
+	bool isFull() {
+		// this function will check if any text can be added without exceeding the max
+		// length of the notepad
+		int lines = getNoOfLines();
+		if (lines < MAX_Y) {
+			return false;
+		}
+		//Node* lineHead = getLineHead(cursor);
+		Node* lastLine = head;
+		while (lastLine->down) {
+			lastLine = lastLine->down;
+		}
+		int sizeOfLine = getSizeOfRow(lastLine);
+		if (sizeOfLine < MAX_X - 1) {
+			return false;
+		}
+		return true;
+	}
+
 	void insertAtEnd(char ch) {
 		// move character ahead
 		Node* newNode = new Node(ch);
@@ -47,6 +66,7 @@ public:
 	}
 
 	void insertChar(char ch) {
+		if (isFull()) return;
 
 		if (cursor->right) {
 			insertAtMiddle(ch);
@@ -309,8 +329,19 @@ public:
 		}
 	}
 
+	int getNoOfLines() {
+		Node* row = head;
+		int size = 0;
+		while (row) {
+			row = row->down;
+			size++;
+		}
+		return size;
+	}
+
 	// print the whole 2d list
 	void printList() {
+		int lines = getNoOfLines();
 		/*int y = 0;
 		while (y < MAX_Y) {
 			gotoxy(1, y++);
@@ -326,7 +357,8 @@ public:
 				cout << ' ';
 			}
 			row = row->down;
-			if (row == nullptr) {
+			if (row == nullptr && lines < MAX_Y) {
+				// clear once more
 				gotoxy(1, y);
 				for (int i = 1; i < MAX_X; i++) {
 					cout << ' ';
@@ -352,9 +384,13 @@ public:
 	}
 
 	void createNewLine() {
-		if (cursorY >= MAX_Y) {
+		int lines = getNoOfLines();
+		if (lines >= MAX_Y) {
 			return;
 		}
+		/*if (cursorY >= MAX_Y) {
+			return;
+		}*/
 		cursorX = 1, cursorY++;
 		Node* rowHead = getLineHead(cursor);
 		Node* newNode = new Node('\0', true);
@@ -479,6 +515,21 @@ public:
 				cursor = lineHead->down;
 				locateCursor();
 				gotoxy(cursorX, cursorY);
+			}
+		}
+	}
+
+	~Notepad() {
+		Node* row = head;
+		while (row != nullptr) {
+			Node* current = row;
+			row = row->down; // move to next line
+
+			// now delete all nodes in the current row
+			while (current != nullptr) {
+				Node* temp = current;
+				current = current->right; // move to the next node in the line
+				delete temp; // free the current node
 			}
 		}
 	}

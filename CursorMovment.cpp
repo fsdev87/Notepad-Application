@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 	initWindow();
 
 	// create notepad object
-	Notepad notepad;
+	Notepad* notepad = new Notepad();
 
 	HANDLE  rhnd = GetStdHandle(STD_INPUT_HANDLE);  // handle to read console
 
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 
 	bool Running = true;
 
-	gotoxy(notepad.cursorX, notepad.cursorY);
+	gotoxy(notepad->cursorX, notepad->cursorY);
 	//programs main loop
 	while (Running) {
 
@@ -78,41 +78,41 @@ int main(int argc, char* argv[]) {
 					switch (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode) {
 
 					case VK_UP: //up
-						notepad.goUp();
+						notepad->goUp();
 						break;
 
 					case VK_DOWN: //down
-						notepad.goDown();
+						notepad->goDown();
 						break;
 
 					case VK_RIGHT: //right
-						notepad.goRight();
+						notepad->goRight();
 						break;
 
 					case VK_LEFT: //left
-						notepad.goLeft();
+						notepad->goLeft();
 						break;
 
 					case VK_CONTROL: //control, print all list at position
 						gotoxy(50, 5);
-						//notepad.printList(notepad.head);
-						cout << notepad.cursor->value << " Cursor: (" << notepad.cursorX << ", " << notepad.cursorY << ")";
+						//notepad->printList(notepad->head);
+						cout << notepad->cursor->value << " Cursor: (" << notepad->cursorX << ", " << notepad->cursorY << ")";
 						break;
 
 					case VK_DELETE:
 						gotoxy(50, 6);
-						cout << notepad.getLineHead(notepad.cursor)->value;
+						cout << notepad->getLineHead(notepad->cursor)->value;
 
 					case VK_RETURN:
-						notepad.createNewLine();
-						notepad.printList();
-						gotoxy(notepad.cursorX, notepad.cursorY);
+						notepad->createNewLine();
+						notepad->printList();
+						gotoxy(notepad->cursorX, notepad->cursorY);
 						break;
 
 					case VK_BACK:
-						notepad.deleteChar();
-						notepad.printList();
-						gotoxy(notepad.cursorX, notepad.cursorY);
+						notepad->deleteChar();
+						notepad->printList();
+						gotoxy(notepad->cursorX, notepad->cursorY);
 						break;
 
 					case VK_ESCAPE: //escape
@@ -122,9 +122,9 @@ int main(int argc, char* argv[]) {
 					default:
 						char ch = eventBuffer->Event.KeyEvent.uChar.AsciiChar;
 						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == ' ') {
-							notepad.insertChar(ch);
-							notepad.printList();
-							gotoxy(notepad.cursorX, notepad.cursorY);
+							notepad->insertChar(ch);
+							notepad->printList();
+							gotoxy(notepad->cursorX, notepad->cursorY);
 						}
 						break;
 					}
