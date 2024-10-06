@@ -114,11 +114,12 @@ public:
 
 		if (cursor->value == '\0') {
 			deleteLine();
+			wrapList();
 		}
 		else {
 			deleteSingleChar();
 		}
-		wrapList();
+		//retractList();
 		locateCursor();
 		makeLinks(head);
 	}
@@ -157,6 +158,36 @@ public:
 		return size;
 	}
 
+	/*
+	the function we are going to write now will make the notepad behave like a real one.
+	which means that what this function is gonna do is that it is gonna retract the list
+	for example, if we keep writing text such that it exceeds the line, and wraps to the next line
+	the new line created will have the boolean false as this line is not created by enter
+	so this function will check if after deleting any character, if the line following it
+	is not created by enter, and the text of the following line can fit inside the current line
+	from where the text is being deleted from, then it will move the text from the following line
+	to the previous line, and then rewrap the list again
+	*/
+
+	void retractList() {
+		Node* rowHead = head->down;
+		while (rowHead) {
+			// if the line is not created by enter
+			if (!rowHead->createdByEnter) {
+				Node* current = rowHead;
+				Node* prevLineCurrent = rowHead->up;
+				while (prevLineCurrent->right) {
+					prevLineCurrent = prevLineCurrent->right; // move to end of previous line
+				}
+			}
+
+
+
+
+			rowHead = rowHead->down;
+		}
+	}
+
 	void wrapList() {
 		// in this function, we need to implement the same logic as wrapLine but for the whole list
 		Node* rowHead = head;
@@ -190,6 +221,13 @@ public:
 
 					if (!rowHead->down) {
 						addLine(current);
+					}
+					else if (rowHead->down->createdByEnter) {
+						Node* newNode = new Node('\0');
+						newNode->up = rowHead;
+						newNode->down = rowHead->down;
+						rowHead->down->up = newNode;
+						rowHead->down = newNode;
 					}
 					// current is at first letter, temp is at last letter
 					Node* currentHead = getLineHead(current);
