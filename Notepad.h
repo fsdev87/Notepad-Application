@@ -114,12 +114,12 @@ public:
 
 		if (cursor->value == '\0') {
 			deleteLine();
-			wrapList();
 		}
 		else {
 			deleteSingleChar();
+			retractList();
 		}
-		//retractList();
+		wrapList();
 		locateCursor();
 		makeLinks(head);
 	}
@@ -170,22 +170,45 @@ public:
 	*/
 
 	void retractList() {
-		Node* rowHead = head->down;
-		while (rowHead) {
-			// if the line is not created by enter
-			if (!rowHead->createdByEnter) {
-				Node* current = rowHead;
-				Node* prevLineCurrent = rowHead->up;
-				while (prevLineCurrent->right) {
-					prevLineCurrent = prevLineCurrent->right; // move to end of previous line
+		Node* rowHead = getLineHead(cursor);
+		if (!rowHead->down) {
+			return; // there is nothing below
+		}
+		if (rowHead->down->createdByEnter) {
+			return; // no relation with line created by enter
+		}
+
+		int sizeOfLine = getSizeOfRow(rowHead);
+		int sizeOfNextWord = 0;
+		Node* nextLineWord = rowHead->down;
+		while (nextLineWord->value != ' ' && nextLineWord->right) {
+			sizeOfNextWord++;
+			nextLineWord = nextLineWord->right;
+		}
+		if (MAX_X - sizeOfLine > sizeOfNextWord) {
+			// now start retraction of list
+			Node* current = rowHead;
+			Node* temp = rowHead;
+			while (rowHead->down && !rowHead->down->createdByEnter) {
+				// move current to end of current line
+				while (current->right) {
+					current = current->right;
 				}
+				current->right = rowHead->down->right;
+				if (rowHead->down->right) {
+					rowHead->down->right->left = current;
+				}
+				temp = rowHead->down;
+				rowHead->down = temp->down;
+				if (temp->down) {
+					temp->down->up = rowHead;
+				}
+				delete temp;
+
 			}
 
-
-
-
-			rowHead = rowHead->down;
 		}
+
 	}
 
 	void wrapList() {
