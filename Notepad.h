@@ -1,6 +1,7 @@
 #pragma once
 #include "Node.h"
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 const int MAX_X = 20;

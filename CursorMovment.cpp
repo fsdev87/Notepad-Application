@@ -94,14 +94,7 @@ int main(int argc, char* argv[]) {
 						break;
 
 					case VK_CONTROL: //control, print all list at position
-						gotoxy(50, 5);
-						//notepad->printList(notepad->head);
-						cout << notepad->cursor->value << " Cursor: (" << notepad->cursorX << ", " << notepad->cursorY << ")";
 						break;
-
-					case VK_DELETE:
-						gotoxy(50, 6);
-						cout << notepad->getLineHead(notepad->cursor)->value;
 
 					case VK_RETURN:
 						notepad->createNewLine();
