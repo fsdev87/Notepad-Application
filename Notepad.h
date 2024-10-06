@@ -256,7 +256,9 @@ public:
 					Node* currentHead = getLineHead(current);
 					currentHead = currentHead->down;
 					// currentHead is at head of next line
-					current->left->right = nullptr; // remove link from previous line
+					if (current->left) {
+						current->left->right = nullptr; // remove link from previous line
+					}
 					temp->right = currentHead->right; // link the word to below line
 					if (currentHead->right) {
 						currentHead->right->left = temp; // link back
@@ -307,18 +309,34 @@ public:
 		}
 	}
 
-	// print the whole text from given node
+	// print the whole 2d list
 	void printList() {
-		int y = 0;
+		/*int y = 0;
 		while (y < MAX_Y) {
 			gotoxy(1, y++);
 			for (int i = 1; i < MAX_X; i++) {
 				cout << ' ';
 			}
+		}*/
+		int y = 0;
+		Node* row = head;
+		while (row) {
+			gotoxy(1, y++);
+			for (int i = 1; i < MAX_X; i++) {
+				cout << ' ';
+			}
+			row = row->down;
+			if (row == nullptr) {
+				gotoxy(1, y);
+				for (int i = 1; i < MAX_X; i++) {
+					cout << ' ';
+				}
+			}
 		}
 
 		y = 0;
-		Node* row = head;
+		//Node* row = head;
+		row = head;
 		while (row && y < MAX_Y) {
 			gotoxy(1, y++);
 			Node* col = row;
