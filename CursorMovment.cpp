@@ -94,6 +94,7 @@ int main(int argc, char* argv[]) {
 						break;
 
 					case VK_CONTROL: //control, print all list at position
+						//notepad->generateDOT();
 						break;
 
 					case VK_RETURN:

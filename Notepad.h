@@ -2,6 +2,7 @@
 #include "Node.h"
 #include <iostream>
 #include <fstream>
+#include <string>
 using namespace std;
 
 const int MAX_X = 20;
@@ -535,4 +536,51 @@ public:
 		}
 	}
 
+	//// dot code
+	//void generateDOT() {
+	//	std::ofstream dotFile("linkedlist.dot");
+
+	//	dotFile << "digraph G {" << std::endl;
+	//	dotFile << "node [shape=box];" << std::endl;
+
+	//	Node* row = head;
+	//	int rowIndex = 0;
+
+	//	// Traverse the 2D linked list row by row
+	//	while (row) {
+	//		Node* col = row;
+	//		int colIndex = 0;
+
+	//		while (col) {
+	//			// Create a unique label for each node using row and column indices
+	//			std::string nodeName = "node" + std::to_string(rowIndex) + "_" + std::to_string(colIndex);
+
+	//			// Print the node label
+	//			dotFile << nodeName << " [label=\"" << (col->value == '\0' ? "NULL" : string(1, col->value)) << "\"];" << std::endl;
+
+	//			// If there's a right node, create an edge to it
+	//			if (col->right) {
+	//				std::string rightNodeName = "node" + std::to_string(rowIndex) + "_" + std::to_string(colIndex + 1);
+	//				dotFile << nodeName << " -> " << rightNodeName << " [label=\"right\"];" << std::endl;
+	//			}
+
+	//			// If there's a down node, create an edge to it
+	//			if (col->down) {
+	//				std::string downNodeName = "node" + std::to_string(rowIndex + 1) + "_" + std::to_string(colIndex);
+	//				dotFile << nodeName << " -> " << downNodeName << " [label=\"down\"];" << std::endl;
+	//			}
+
+	//			// Move to the next node in the row
+	//			col = col->right;
+	//			colIndex++;
+	//		}
+
+	//		// Move to the next row
+	//		row = row->down;
+	//		rowIndex++;
+	//	}
+
+	//	dotFile << "}" << std::endl;
+	//	dotFile.close();
+	//}
 };
