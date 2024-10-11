@@ -42,13 +42,27 @@ void initWindow() {
 }
 
 void undo(Notepad& notepad) {
+	if (undoCount <= 0 || undoStack.isEmpty()) {
+		return;
+	}
 	redoStack.push(notepad);
 	notepad = undoStack.pop();
+	undoCount--;
+	if (redoCount < 5) {
+		redoCount++;
+	}
 }
 
 void redo(Notepad& notepad) {
+	if (redoCount <= 0 || redoStack.isEmpty()) {
+		return;
+	}
 	undoStack.push(notepad);
 	notepad = redoStack.pop();
+	redoCount--;
+	if (undoCount < 5) {
+		undoCount++;
+	}
 }
 
 
@@ -62,6 +76,8 @@ int main(int argc, char* argv[]) {
 	// initialize window
 	initWindow();
 
+	undoStack.push(Notepad());
+
 	// create notepad object
 	Notepad notepad;
 	Notepad notepad2;
@@ -74,6 +90,8 @@ int main(int argc, char* argv[]) {
 
 	bool Running = true;
 	char deletedChar;
+	bool undoFlag = false;
+	bool redoFlag = false;
 
 	gotoxy(notepad.cursorX, notepad.cursorY);
 	//programs main loop
@@ -121,12 +139,29 @@ int main(int argc, char* argv[]) {
 						break;
 
 					case VK_RETURN:
+						if (undoFlag) {
+							undoFlag = false;
+							undoCount = 5;
+							undoStack.clearStack();
+							undoStack.push(notepad);
+							redoCount = 5;
+							redoStack.clearStack();
+						}
 						notepad.createNewLine();
 						notepad.printList();
 						gotoxy(notepad.cursorX, notepad.cursorY);
+						undoStack.push(notepad);
 						break;
 
 					case VK_BACK:
+						if (undoFlag) {
+							undoFlag = false;
+							undoCount = 5;
+							undoStack.clearStack();
+							undoStack.push(notepad);
+							redoCount = 5;
+							redoStack.clearStack();
+						}
 						deletedChar = notepad.deleteChar();
 						notepad.printList();
 						gotoxy(notepad.cursorX, notepad.cursorY);
@@ -145,6 +180,14 @@ int main(int argc, char* argv[]) {
 					default:
 						char ch = eventBuffer->Event.KeyEvent.uChar.AsciiChar;
 						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ') {
+							if (undoFlag) {
+								undoFlag = false;
+								undoCount = 5;
+								undoStack.clearStack();
+								undoStack.push(notepad);
+								redoCount = 5;
+								redoStack.clearStack();
+							}
 							notepad.insertChar(ch);
 							notepad.printList();
 							gotoxy(notepad.cursorX, notepad.cursorY);
@@ -153,11 +196,17 @@ int main(int argc, char* argv[]) {
 							}
 						}
 						else if (ch == '1') {
+							if (!undoFlag) {
+								undoFlag = true;
+							}
 							undo(notepad);
 							notepad.printList();
 							gotoxy(notepad.cursorX, notepad.cursorY);
 						}
 						else if (ch == '2') {
+							if (!redoFlag) {
+								redoFlag = true;
+							}
 							redo(notepad);
 							notepad.printList();
 							gotoxy(notepad.cursorX, notepad.cursorY);

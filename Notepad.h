@@ -530,11 +530,25 @@ public:
 	// we wil overload the equal operator for notepad, making deep copy of the list
 	// and updating all head, cursor, and cursorX and cursorY
 	void operator=(const Notepad& other) {
-		//this->clear();  // Clean up the existing list in 'this'
+		//if (this->head) {
+		//	// clean up the existing list in 'this'
+		//	Node* tempRow = this->head;
+		//	while (tempRow != nullptr) {
+		//		Node* current = tempRow;
+		//		tempRow = tempRow->down; // move to next line
+
+		//		// now delete all nodes in the current row
+		//		while (current != nullptr) {
+		//			Node* temp = current;
+		//			current = current->right; // move to the next node in the line
+		//			delete temp; // free the current node
+		//		}
+		//	}
+		//}
 		this->cursorX = other.cursorX;
 		this->cursorY = other.cursorY;
 
-		// Step 1: Copy the structure (row links)
+		// copy the structure (row links)
 		this->head = new Node('\0');
 		Node* current = this->head;
 		Node* otherRow = other.head->down;
@@ -547,7 +561,7 @@ public:
 			otherRow = otherRow->down;
 		}
 
-		// Step 2: Fill the rows (column links)
+		// fill the rows (column links)
 		Node* thisRow = this->head;
 		otherRow = other.head;
 
@@ -555,7 +569,7 @@ public:
 			Node* otherCol = otherRow->right;
 			Node* thisCol = thisRow;
 
-			// Copy the content of each row
+			// copy the content of each row
 			while (otherCol) {
 				thisCol->right = new Node(otherCol->value);
 				thisCol->right->left = thisCol;
@@ -567,10 +581,10 @@ public:
 			otherRow = otherRow->down;
 		}
 
-		// Step 3: Link the rows (vertical links)
+		// link the rows (vertical links)
 		this->makeLinks(this->head);
 
-		// Step 4: Relocate cursor in the copied list
+		// relocate cursor in the copied list
 		Node* temp = this->head;
 		for (int i = 0; i < this->cursorY; i++) {
 			if (temp->down) {
@@ -583,7 +597,7 @@ public:
 			}
 		}
 
-		this->cursor = temp;  // Update the cursor to the correct position in the copied list
+		this->cursor = temp;  // update the cursor to the correct position in the copied list
 	}
 
 
