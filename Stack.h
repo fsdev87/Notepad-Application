@@ -53,6 +53,9 @@ public:
 	}
 
 	void clearStack() {
+		while (!isEmpty()) {
+			pop();
+		}
 
 	}
 
