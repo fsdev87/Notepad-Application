@@ -1,14 +1,16 @@
 #pragma once
 #include "Node.h"
 #include <iostream>
+#include "Notepad.h"
 using namespace std;
 
 struct StackNode {
-	Node* word;
+	Notepad notepad;
 	StackNode* next;
 
-	StackNode(Node* word) {
-		this->word = word;
+	StackNode(const Notepad& other) {
+		this->notepad = Notepad();
+		this->notepad = other;
 		next = nullptr;
 	}
 };
@@ -21,26 +23,37 @@ public:
 		top = nullptr;
 	}
 
-	void push(Node* word) {
-		StackNode* newNode = new StackNode(word);
+	void push(const Notepad& other) {
+		StackNode* newNode = new StackNode(other);
 		newNode->next = top;
 		top = newNode;
 	}
 
-	Node* pop() {
-		if (top == nullptr) {
-			return nullptr;
+	Notepad pop() {
+		if (top != nullptr) {
+			Notepad res;
+			res = top->notepad;
+			StackNode* temp = top;
+			top = top->next;
+			delete temp;
+			return res;
 		}
-
-		Node* word = top->word;
-		StackNode* temp = top;
-		top = top->next;
-		delete temp;
-		return word;
+		return Notepad();
 	}
 
 	bool isEmpty() {
 		return top == nullptr;
+	}
+
+	Notepad peek() {
+		if (top != nullptr) {
+			return top->notepad;
+		}
+		return Notepad();
+	}
+
+	void clearStack() {
+
 	}
 
 };

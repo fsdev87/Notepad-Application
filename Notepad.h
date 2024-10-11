@@ -2,7 +2,7 @@
 #include "Node.h"
 #include <iostream>
 #include <fstream>
-#include <string>
+
 using namespace std;
 
 const int MAX_X = 20;
@@ -20,12 +20,15 @@ public:
 	Node* cursor;
 	int cursorX, cursorY;
 
-
 public:
 	Notepad() {
 		head = new Node('\0');
 		cursor = head;
 		cursorX = 1, cursorY = 0;
+	}
+
+	Notepad(const Notepad& other) {
+		*this = other;
 	}
 
 	bool isFull() {
@@ -128,22 +131,25 @@ public:
 		}
 	}
 
-	void deleteChar() {
+	char deleteChar() {
+		char ch = '\0';
 		// no need to do anything if we are already at the start of the notepad
 		if (cursor == head) {
-			return;
+			return ch;
 		}
 
 		if (cursor->value == '\0') {
 			deleteLine();
 		}
 		else {
+			ch = cursor->value;
 			deleteSingleChar();
 			retractList();
 		}
 		wrapList();
 		locateCursor();
 		makeLinks(head);
+		return ch;
 	}
 
 	void makeLinks(Node* rowHead) {
@@ -521,7 +527,67 @@ public:
 		}
 	}
 
-	~Notepad() {
+	// we wil overload the equal operator for notepad, making deep copy of the list
+	// and updating all head, cursor, and cursorX and cursorY
+	void operator=(const Notepad& other) {
+		//this->clear();  // Clean up the existing list in 'this'
+		this->cursorX = other.cursorX;
+		this->cursorY = other.cursorY;
+
+		// Step 1: Copy the structure (row links)
+		this->head = new Node('\0');
+		Node* current = this->head;
+		Node* otherRow = other.head->down;
+
+		while (otherRow) {
+			current->down = new Node('\0');
+			current->down->createdByEnter = otherRow->createdByEnter;
+			current->down->up = current;
+			current = current->down;
+			otherRow = otherRow->down;
+		}
+
+		// Step 2: Fill the rows (column links)
+		Node* thisRow = this->head;
+		otherRow = other.head;
+
+		while (otherRow) {
+			Node* otherCol = otherRow->right;
+			Node* thisCol = thisRow;
+
+			// Copy the content of each row
+			while (otherCol) {
+				thisCol->right = new Node(otherCol->value);
+				thisCol->right->left = thisCol;
+				thisCol = thisCol->right;
+				otherCol = otherCol->right;
+			}
+
+			thisRow = thisRow->down;
+			otherRow = otherRow->down;
+		}
+
+		// Step 3: Link the rows (vertical links)
+		this->makeLinks(this->head);
+
+		// Step 4: Relocate cursor in the copied list
+		Node* temp = this->head;
+		for (int i = 0; i < this->cursorY; i++) {
+			if (temp->down) {
+				temp = temp->down;
+			}
+		}
+		for (int i = 1; i < this->cursorX; i++) {
+			if (temp->right) {
+				temp = temp->right;
+			}
+		}
+
+		this->cursor = temp;  // Update the cursor to the correct position in the copied list
+	}
+
+
+	void clear() {
 		Node* row = head;
 		while (row != nullptr) {
 			Node* current = row;
@@ -534,6 +600,41 @@ public:
 				delete temp; // free the current node
 			}
 		}
+	}
+
+	void writeToFile(const string& filename) {
+		ofstream outFile(filename);
+
+		if (!outFile) {
+			cout << "Error: Could not open file " << filename << " for writing." << endl;
+			return;
+		}
+
+		Node* row = head;
+		while (row) {
+			Node* col = row;  // Start from the first non-null character in the row
+			while (col) {
+				if (col->value == '\0') {
+					outFile << col->createdByEnter << ' ';
+				}
+				else {
+					outFile << col->value;  // Write the character to the file
+				}
+				col = col->right;
+			}
+			outFile << '\n';  // End the current line (move to the next row)
+			row = row->down;
+		}
+		if (this->cursor) {
+			outFile << this->cursor->value;  // Write the character to the file
+		}
+		outFile.close();  // Close the file
+		cout << "Successfully wrote the contents to " << filename << endl;
+	}
+
+
+	~Notepad() {
+		clear();
 	}
 
 	//// dot code

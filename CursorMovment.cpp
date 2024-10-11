@@ -1,11 +1,19 @@
 #include <iostream>
 #include <Windows.h>
-#include "Notepad.h"
+#include "Stack.h"
 using namespace std;
 
 // Function prototypes
 void gotoxy(int x, int y);
 void initWindow();
+void undo(Notepad& notepad);
+void redo(Notepad& notepad);
+
+// Global variables
+Stack undoStack;
+Stack redoStack;
+int undoCount = 5;
+int redoCount = 5;
 
 
 // Helper Functions
@@ -33,6 +41,18 @@ void initWindow() {
 	cout << "Word Suggestions";
 }
 
+void undo(Notepad& notepad) {
+	redoStack.push(notepad);
+	notepad = undoStack.pop();
+}
+
+void redo(Notepad& notepad) {
+	undoStack.push(notepad);
+	notepad = redoStack.pop();
+}
+
+
+
 // End Helper Functions
 
 
@@ -43,7 +63,9 @@ int main(int argc, char* argv[]) {
 	initWindow();
 
 	// create notepad object
-	Notepad* notepad = new Notepad();
+	Notepad notepad;
+	Notepad notepad2;
+
 
 	HANDLE  rhnd = GetStdHandle(STD_INPUT_HANDLE);  // handle to read console
 
@@ -51,8 +73,9 @@ int main(int argc, char* argv[]) {
 	DWORD EventsRead = 0; // Events read from console
 
 	bool Running = true;
+	char deletedChar;
 
-	gotoxy(notepad->cursorX, notepad->cursorY);
+	gotoxy(notepad.cursorX, notepad.cursorY);
 	//programs main loop
 	while (Running) {
 
@@ -78,47 +101,66 @@ int main(int argc, char* argv[]) {
 					switch (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode) {
 
 					case VK_UP: //up
-						notepad->goUp();
+						notepad.goUp();
 						break;
 
 					case VK_DOWN: //down
-						notepad->goDown();
+						notepad.goDown();
 						break;
 
 					case VK_RIGHT: //right
-						notepad->goRight();
+						notepad.goRight();
 						break;
 
 					case VK_LEFT: //left
-						notepad->goLeft();
+						notepad.goLeft();
 						break;
 
 					case VK_CONTROL: //control, print all list at position
-						//notepad->generateDOT();
+						//notepad.generateDOT();
 						break;
 
 					case VK_RETURN:
-						notepad->createNewLine();
-						notepad->printList();
-						gotoxy(notepad->cursorX, notepad->cursorY);
+						notepad.createNewLine();
+						notepad.printList();
+						gotoxy(notepad.cursorX, notepad.cursorY);
 						break;
 
 					case VK_BACK:
-						notepad->deleteChar();
-						notepad->printList();
-						gotoxy(notepad->cursorX, notepad->cursorY);
+						deletedChar = notepad.deleteChar();
+						notepad.printList();
+						gotoxy(notepad.cursorX, notepad.cursorY);
+						if (deletedChar == ' ') {
+							undoStack.push(notepad);
+						}
 						break;
 
 					case VK_ESCAPE: //escape
 						Running = false;
+						notepad2 = undoStack.peek();
+						notepad.writeToFile("notepad_output.txt");
+						notepad2.writeToFile("notepad2_output.txt");
 						break;
 
 					default:
 						char ch = eventBuffer->Event.KeyEvent.uChar.AsciiChar;
-						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == ' ') {
-							notepad->insertChar(ch);
-							notepad->printList();
-							gotoxy(notepad->cursorX, notepad->cursorY);
+						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ') {
+							notepad.insertChar(ch);
+							notepad.printList();
+							gotoxy(notepad.cursorX, notepad.cursorY);
+							if (ch == ' ') {
+								undoStack.push(notepad);
+							}
+						}
+						else if (ch == '1') {
+							undo(notepad);
+							notepad.printList();
+							gotoxy(notepad.cursorX, notepad.cursorY);
+						}
+						else if (ch == '2') {
+							redo(notepad);
+							notepad.printList();
+							gotoxy(notepad.cursorX, notepad.cursorY);
 						}
 						break;
 					}
