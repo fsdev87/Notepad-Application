@@ -4,7 +4,6 @@
 using namespace std;
 
 // Function prototypes
-void gotoxy(int x, int y);
 void initWindow();
 void loadFile(Notepad& notepad, filesystem::path& filePath);
 void undo(Notepad& notepad);
@@ -15,7 +14,6 @@ Stack undoStack;
 Stack redoStack;
 int undoCount = 5;
 int redoCount = 5;
-
 
 // Helper Functions
 
@@ -77,10 +75,7 @@ void redo(Notepad& notepad) {
 	}
 }
 
-
-
 // End Helper Functions
-
 
 int main(int argc, char* argv[]) {
 	// create notepad object
@@ -91,6 +86,15 @@ int main(int argc, char* argv[]) {
 	// menu
 	char choice;
 	filesystem::path filePath;
+	cout << "Welcome to the Notepad!!!" << endl << endl;
+	cout << "Instructions for the Notepad:" << endl;
+	cout << "1. Use arrow keys to move the cursor" << endl;
+	cout << "2. Use backspace to delete a character" << endl;
+	cout << "3. Use enter to create a new line" << endl;
+	cout << "4. Use '1' to undo" << endl;
+	cout << "5. Use '2' to redo" << endl;
+	cout << "6. Use 'ESC' to exit" << endl << endl;
+	cout << "Menu:" << endl;
 	cout << "1. Create a new file" << endl;
 	cout << "2. Load a file" << endl;
 	cout << "3. Exit" << endl;
@@ -112,6 +116,10 @@ int main(int argc, char* argv[]) {
 	}
 	else if (choice == '3') {
 		// exit
+		return 0;
+	}
+	else {
+		cout << "Invalid choice" << endl;
 		return 0;
 	}
 

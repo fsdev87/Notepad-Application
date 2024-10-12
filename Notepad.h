@@ -3,10 +3,9 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-
 using namespace std;
 
-const int MAX_X = 100;
+const int MAX_X = 98;
 const int MAX_Y = 23;
 
 void gotoxy(int x, int y)
@@ -353,13 +352,6 @@ public:
 	// print the whole 2d list
 	void printList() {
 		int lines = getNoOfLines();
-		/*int y = 0;
-		while (y < MAX_Y) {
-			gotoxy(1, y++);
-			for (int i = 1; i < MAX_X; i++) {
-				cout << ' ';
-			}
-		}*/
 		int y = 0;
 		Node* row = head;
 		while (row) {
@@ -379,7 +371,6 @@ public:
 		}
 
 		y = 0;
-		//Node* row = head;
 		row = head;
 		while (row && y < MAX_Y) {
 			gotoxy(1, y++);
@@ -400,9 +391,6 @@ public:
 		if (lines >= MAX_Y) {
 			return;
 		}
-		/*if (cursorY >= MAX_Y) {
-			return;
-		}*/
 		cursorX = 1, cursorY++;
 		Node* rowHead = getLineHead(cursor);
 		Node* newNode = new Node('\0', true);

@@ -56,7 +56,6 @@ public:
 		while (!isEmpty()) {
 			pop();
 		}
-
 	}
 
 };
