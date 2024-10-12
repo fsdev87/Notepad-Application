@@ -2,10 +2,11 @@
 #include "Node.h"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 using namespace std;
 
-const int MAX_X = 20;
+const int MAX_X = 100;
 const int MAX_Y = 23;
 
 void gotoxy(int x, int y)
@@ -131,18 +132,20 @@ public:
 		}
 	}
 
-	char deleteChar() {
-		char ch = '\0';
+	Node deleteChar() {
+		Node ch('\0');
 		// no need to do anything if we are already at the start of the notepad
 		if (cursor == head) {
 			return ch;
 		}
 
 		if (cursor->value == '\0') {
+			ch.createdByEnter = cursor->createdByEnter;
 			deleteLine();
 		}
 		else {
-			ch = cursor->value;
+			ch.value = cursor->value;
+			ch.createdByEnter = cursor->createdByEnter;
 			deleteSingleChar();
 			retractList();
 		}
@@ -361,6 +364,7 @@ public:
 		Node* row = head;
 		while (row) {
 			gotoxy(1, y++);
+
 			for (int i = 1; i < MAX_X; i++) {
 				cout << ' ';
 			}
@@ -530,21 +534,7 @@ public:
 	// we wil overload the equal operator for notepad, making deep copy of the list
 	// and updating all head, cursor, and cursorX and cursorY
 	void operator=(const Notepad& other) {
-		//if (this->head) {
-		//	// clean up the existing list in 'this'
-		//	Node* tempRow = this->head;
-		//	while (tempRow != nullptr) {
-		//		Node* current = tempRow;
-		//		tempRow = tempRow->down; // move to next line
-
-		//		// now delete all nodes in the current row
-		//		while (current != nullptr) {
-		//			Node* temp = current;
-		//			current = current->right; // move to the next node in the line
-		//			delete temp; // free the current node
-		//		}
-		//	}
-		//}
+		// this->clear(); // clean up the existing list in 'this'
 		this->cursorX = other.cursorX;
 		this->cursorY = other.cursorY;
 
@@ -616,11 +606,38 @@ public:
 		}
 	}
 
-	void writeToFile(const string& filename) {
-		ofstream outFile(filename);
+	void readFromFile(filesystem::path filePath) {
+		ifstream file(filePath);
+		head = new Node('\0');
+		cursor = head;
+		cursorX = 1, cursorY = 0;
+		char ch;
+		Node* rowHead = head;
+		Node* current = head;
+		while (file.get(ch)) {
+			if (ch == '1' || ch == '0') {
+				rowHead->createdByEnter = (ch == '1');
+			}
+			else if (ch == '\n') {
+				rowHead->down = new Node('\0');
+				rowHead->down->up = rowHead;
+				rowHead = rowHead->down;
+				current = rowHead;
+			}
+			else {
+				current->right = new Node(ch);
+				current->right->left = current;
+				current = current->right;
+			}
+		}
+		makeLinks(head);
+	}
+
+	void saveToFile(filesystem::path filePath) {
+		ofstream outFile(filePath);
 
 		if (!outFile) {
-			cout << "Error: Could not open file " << filename << " for writing." << endl;
+			cout << "Error: Could not open file " << filePath << " for writing." << endl;
 			return;
 		}
 
@@ -629,21 +646,20 @@ public:
 			Node* col = row;  // Start from the first non-null character in the row
 			while (col) {
 				if (col->value == '\0') {
-					outFile << col->createdByEnter << ' ';
+					outFile << col->createdByEnter;
 				}
 				else {
 					outFile << col->value;  // Write the character to the file
 				}
 				col = col->right;
 			}
-			outFile << '\n';  // End the current line (move to the next row)
 			row = row->down;
-		}
-		if (this->cursor) {
-			outFile << this->cursor->value;  // Write the character to the file
+			if (row) {
+				outFile << '\n';  // End the current line (move to the next row)
+			}
 		}
 		outFile.close();  // Close the file
-		cout << "Successfully wrote the contents to " << filename << endl;
+		cout << "Successfully saved the file to " << filePath << endl;
 	}
 
 
@@ -651,51 +667,4 @@ public:
 		clear();
 	}
 
-	//// dot code
-	//void generateDOT() {
-	//	std::ofstream dotFile("linkedlist.dot");
-
-	//	dotFile << "digraph G {" << std::endl;
-	//	dotFile << "node [shape=box];" << std::endl;
-
-	//	Node* row = head;
-	//	int rowIndex = 0;
-
-	//	// Traverse the 2D linked list row by row
-	//	while (row) {
-	//		Node* col = row;
-	//		int colIndex = 0;
-
-	//		while (col) {
-	//			// Create a unique label for each node using row and column indices
-	//			std::string nodeName = "node" + std::to_string(rowIndex) + "_" + std::to_string(colIndex);
-
-	//			// Print the node label
-	//			dotFile << nodeName << " [label=\"" << (col->value == '\0' ? "NULL" : string(1, col->value)) << "\"];" << std::endl;
-
-	//			// If there's a right node, create an edge to it
-	//			if (col->right) {
-	//				std::string rightNodeName = "node" + std::to_string(rowIndex) + "_" + std::to_string(colIndex + 1);
-	//				dotFile << nodeName << " -> " << rightNodeName << " [label=\"right\"];" << std::endl;
-	//			}
-
-	//			// If there's a down node, create an edge to it
-	//			if (col->down) {
-	//				std::string downNodeName = "node" + std::to_string(rowIndex + 1) + "_" + std::to_string(colIndex);
-	//				dotFile << nodeName << " -> " << downNodeName << " [label=\"down\"];" << std::endl;
-	//			}
-
-	//			// Move to the next node in the row
-	//			col = col->right;
-	//			colIndex++;
-	//		}
-
-	//		// Move to the next row
-	//		row = row->down;
-	//		rowIndex++;
-	//	}
-
-	//	dotFile << "}" << std::endl;
-	//	dotFile.close();
-	//}
 };

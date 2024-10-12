@@ -6,6 +6,7 @@ using namespace std;
 // Function prototypes
 void gotoxy(int x, int y);
 void initWindow();
+void loadFile(Notepad& notepad, filesystem::path& filePath);
 void undo(Notepad& notepad);
 void redo(Notepad& notepad);
 
@@ -41,6 +42,17 @@ void initWindow() {
 	cout << "Word Suggestions";
 }
 
+void loadFile(Notepad& notepad, filesystem::path& filePath) {
+	ifstream file(filePath);
+	if (file) {
+		notepad.readFromFile(filePath);
+	}
+	else {
+		ofstream newFile(filePath);
+		newFile.close();
+	}
+}
+
 void undo(Notepad& notepad) {
 	if (undoCount <= 0 || undoStack.isEmpty()) {
 		return;
@@ -71,17 +83,45 @@ void redo(Notepad& notepad) {
 
 
 int main(int argc, char* argv[]) {
+	// create notepad object
+	Notepad notepad;
+
+	system("cls");
+
+	// menu
+	char choice;
+	filesystem::path filePath;
+	cout << "1. Create a new file" << endl;
+	cout << "2. Load a file" << endl;
+	cout << "3. Exit" << endl;
+	cout << "Your Choice: ";
+	cin >> choice;
+	if (choice == '1') {
+		// create new file
+		cout << "Enter the name of file you want to create: ";
+		cin >> filePath;
+		ofstream newFile(filePath);
+		newFile.close();
+	}
+	else if (choice == '2') {
+		// load file
+		cout << "Enter the name of file you want to load: ";
+		cin >> filePath;
+		//if file p is found open it else create it
+		loadFile(notepad, filePath);
+	}
+	else if (choice == '3') {
+		// exit
+		return 0;
+	}
+
 
 	system("cls");
 	// initialize window
 	initWindow();
+	notepad.printList();
 
 	undoStack.push(Notepad());
-
-	// create notepad object
-	Notepad notepad;
-	Notepad notepad2;
-
 
 	HANDLE  rhnd = GetStdHandle(STD_INPUT_HANDLE);  // handle to read console
 
@@ -89,7 +129,7 @@ int main(int argc, char* argv[]) {
 	DWORD EventsRead = 0; // Events read from console
 
 	bool Running = true;
-	char deletedChar;
+	Node deletedChar('\0');
 	bool undoFlag = false;
 	bool redoFlag = false;
 
@@ -114,7 +154,6 @@ int main(int argc, char* argv[]) {
 				// check if event[i] is a key event && if so is a press not a release
 				if (eventBuffer[i].EventType == KEY_EVENT && eventBuffer[i].Event.KeyEvent.bKeyDown) {
 
-
 					// check if the key press was an arrow key
 					switch (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode) {
 
@@ -134,10 +173,6 @@ int main(int argc, char* argv[]) {
 						notepad.goLeft();
 						break;
 
-					case VK_CONTROL: //control, print all list at position
-						//notepad.generateDOT();
-						break;
-
 					case VK_RETURN:
 						if (undoFlag) {
 							undoFlag = false;
@@ -147,10 +182,10 @@ int main(int argc, char* argv[]) {
 							redoCount = 5;
 							redoStack.clearStack();
 						}
+						undoStack.push(notepad);
 						notepad.createNewLine();
 						notepad.printList();
 						gotoxy(notepad.cursorX, notepad.cursorY);
-						undoStack.push(notepad);
 						break;
 
 					case VK_BACK:
@@ -162,19 +197,29 @@ int main(int argc, char* argv[]) {
 							redoCount = 5;
 							redoStack.clearStack();
 						}
-						deletedChar = notepad.deleteChar();
-						notepad.printList();
-						gotoxy(notepad.cursorX, notepad.cursorY);
-						if (deletedChar == ' ') {
+						if (notepad.cursor->value == ' ') {
 							undoStack.push(notepad);
 						}
+						else if (notepad.cursor->value == '\0' && notepad.cursor->createdByEnter) {
+							undoStack.push(notepad);
+						}
+						//deletedChar = notepad.deleteChar();
+						notepad.deleteChar();
+						notepad.printList();
+						gotoxy(notepad.cursorX, notepad.cursorY);
 						break;
 
 					case VK_ESCAPE: //escape
 						Running = false;
-						notepad2 = undoStack.peek();
-						notepad.writeToFile("notepad_output.txt");
-						notepad2.writeToFile("notepad2_output.txt");
+						system("cls");
+						gotoxy(0, 0);
+						cout << "Do you want to save the file? (y/n): ";
+						cin >> choice;
+						if (choice == 'y' || choice == 'Y') {
+							cout << "Enter the name of file you want to save: ";
+							cin >> filePath;
+							notepad.saveToFile(filePath);
+						}
 						break;
 
 					default:
