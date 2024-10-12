@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
 							notepad.insertChar(ch);
 							notepad.printList();
 							gotoxy(notepad.cursorX, notepad.cursorY);
-							if (ch == ' ') {
+							if (ch == ' ' && notepad.cursor->left->value != ' ') {
 								undoStack.push(notepad);
 							}
 						}

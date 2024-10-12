@@ -662,7 +662,6 @@ public:
 		cout << "Successfully saved the file to " << filePath << endl;
 	}
 
-
 	~Notepad() {
 		clear();
 	}
