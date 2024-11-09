@@ -238,17 +238,3 @@ public:
 		cout << "Graph image saved to 'trie.png'.\n";
 	}
 };
-
-//int main() {
-//	NAryTree t;
-//	for (auto word : { "banana", "bandit", "daniyal", "ban" }) {
-//		t.insert(word);
-//	}
-//	cout << boolalpha << t.search("hello") << endl;
-//	cout << boolalpha << t.search("mustafa") << endl;
-//	cout << boolalpha << t.search("thison") << endl;
-//	t.visualizeNAryTree();
-//	cout << t.height() << endl;
-//	cout << string(10, 'z');
-//	return 0;
-//}

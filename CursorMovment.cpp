@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "Stack.h"
 #include "NAryTree.h"
+#include "ChilliMilliTree.h"
 #include "codes/String.h"
 using namespace std;
 
@@ -12,16 +13,18 @@ void undo(Notepad& notepad);
 void redo(Notepad& notepad);
 void clearSuggestionsArea();
 void printSuggestions(String* words, int count);
+void wordCompletion(char ch, Notepad& notepad);
+void sentenceCompletion(char ch, Notepad& notepad);
 
 // Global variables
 Stack undoStack;
 Stack redoStack;
 int undoCount = 5;
 int redoCount = 5;
-//bool wordSuggestion = false;
 
 // Trees
 NAryTree searchTree;
+ChilliMilliTree graphTree;
 
 // Helper Functions
 
@@ -106,7 +109,91 @@ void printSuggestions(String* words, int count) {
 	}
 	else {
 		gotoxy(0, MAX_Y + 3);
-		cout << "No suggestions found";
+		cout << "No words found...";
+	}
+}
+
+void wordCompletion(char ch, Notepad& notepad) {
+	cout << ch;
+	// word completion
+	Node* temp = notepad.cursor; // the character at cursor
+	String word; // tal
+	while (temp->value != ' ' && temp->value != '\0') {
+		word.appendStart(temp->value);
+		temp = temp->left;
+	}
+	// now we have got the word before '@'
+	String* words = searchTree.getWords(word); // all words from tal
+	int count = searchTree.getCount(word);
+	clearSuggestionsArea(); // clear
+	printSuggestions(words, count); // print suggestions
+	if (count > 0) {
+		int suggestionChoice;
+		gotoxy(0, MAX_Y + 3);
+		cout << "Enter your choice: ";
+		cin >> suggestionChoice;
+		// now we need to insert it in the notepad
+		if (suggestionChoice > 0 && suggestionChoice <= count) {
+			suggestionChoice--;
+			String selectedWord = words[suggestionChoice];
+			temp = notepad.cursor;
+			while (temp->value != ' ' && temp->value != '\0') {
+				notepad.deleteChar();
+				temp = notepad.cursor;
+			}
+			for (int i = 0; i < selectedWord.getLength(); i++) {
+				notepad.insertChar(selectedWord[i]);
+			}
+			clearSuggestionsArea();
+			notepad.printList();
+			gotoxy(notepad.cursorX, notepad.cursorY);
+		}
+	}
+	else {
+		gotoxy(notepad.cursorX, notepad.cursorY);
+		cout << ' ';
+		gotoxy(notepad.cursorX, notepad.cursorY);
+	}
+}
+
+void sentenceCompletion(char ch, Notepad& notepad) {
+	cout << ch;
+	// sentence completion
+	Node* temp = notepad.cursor->left; // the character at cursor ie ' '
+	String word; // tal
+	while (temp->value != ' ' && temp->value != '\0') {
+		word.appendStart(temp->value);
+		temp = temp->left;
+	}
+	// now we have got the word before '*'
+	Vector* values = graphTree.getValues(word);
+	String* words = values->arr; // all words from tal
+	int count = values->size;
+
+	clearSuggestionsArea(); // clear
+	printSuggestions(words, count); // print suggestions
+	if (count > 0) {
+		int suggestionChoice;
+		gotoxy(0, MAX_Y + 3);
+		cout << "Enter your choice: ";
+		cin >> suggestionChoice;
+		// now we need to insert it in the notepad
+		if (suggestionChoice > 0 && suggestionChoice <= count) {
+			suggestionChoice--;
+			String selectedWord = words[suggestionChoice];
+			temp = notepad.cursor;
+			for (int i = 0; i < selectedWord.getLength(); i++) {
+				notepad.insertChar(selectedWord[i]);
+			}
+			clearSuggestionsArea();
+			notepad.printList();
+			gotoxy(notepad.cursorX, notepad.cursorY);
+		}
+	}
+	else {
+		gotoxy(notepad.cursorX, notepad.cursorY);
+		cout << ' ';
+		gotoxy(notepad.cursorX, notepad.cursorY);
 	}
 }
 
@@ -290,49 +377,23 @@ int main(int argc, char* argv[]) {
 									temp = temp->left;
 								}
 								searchTree.insert(word);
+
+								String prevWord;
+								temp = temp->left;
+								if (temp) {
+									while (temp->value != ' ' && temp->value != '\0') {
+										prevWord.appendStart(temp->value);
+										temp = temp->left;
+									}
+									graphTree.insert(prevWord, word);
+								}
 							}
 						}
 						else if (ch == '@') {
-							cout << ch;
-							// word completion
-							Node* temp = notepad.cursor; // the character at cursor
-							String word; // tal
-							while (temp->value != ' ' && temp->value != '\0') {
-								word.appendStart(temp->value);
-								temp = temp->left;
-							}
-							// now we have got the word before '@'
-							String* words = searchTree.getWords(word); // all words from tal
-							int count = searchTree.getCount(word);
-							clearSuggestionsArea(); // clear
-							printSuggestions(words, count); // print suggestions
-							if (count > 0) {
-								int suggestionChoice;
-								gotoxy(0, MAX_Y + 3);
-								cout << "Enter your choice: ";
-								cin >> suggestionChoice;
-								// now we need to insert it in the notepad
-								if (suggestionChoice > 0 && suggestionChoice <= count) {
-									suggestionChoice--;
-									String selectedWord = words[suggestionChoice];
-									temp = notepad.cursor;
-									while (temp->value != ' ' && temp->value != '\0') {
-										notepad.deleteChar();
-										temp = notepad.cursor;
-									}
-									for (int i = 0; i < selectedWord.getLength(); i++) {
-										notepad.insertChar(selectedWord[i]);
-									}
-									clearSuggestionsArea();
-									notepad.printList();
-									gotoxy(notepad.cursorX, notepad.cursorY);
-								}
-							}
-							else {
-								gotoxy(notepad.cursorX, notepad.cursorY);
-								cout << ' ';
-								gotoxy(notepad.cursorX, notepad.cursorY);
-							}
+							wordCompletion(ch, notepad);
+						}
+						else if (ch == '*') {
+							sentenceCompletion(ch, notepad);
 						}
 						else if (ch == '1') {
 							if (!undoFlag) {
@@ -373,7 +434,7 @@ int main(int argc, char* argv[]) {
 	else {
 		cout << "No matches found" << endl;
 	}*/
+	graphTree.print();
 	searchTree.visualizeNAryTree();
-
 	return 0;
 }
