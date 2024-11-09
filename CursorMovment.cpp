@@ -96,14 +96,27 @@ void clearSuggestionsArea() {
 	for (int i = 0; i < MAX_X; i++) {
 		cout << " ";
 	}
+	tempX = 0, tempY = MAX_Y + 4;
+	gotoxy(tempX, tempY);
+	for (int i = 0; i < MAX_X; i++) {
+		cout << " ";
+	}
 }
 
 void printSuggestions(String* words, int count) {
+	int length = 0;
 	int tempX = 0, tempY = MAX_Y + 3;
 	gotoxy(tempX, tempY);
 	if (words) {
 		for (int i = 0; i < count; i++) {
-			cout << i + 1 << ". " << words[i].getStr() << "  ";
+			if (length + words[i].getLength() + 5 < MAX_X - 2) {
+				cout << i + 1 << ". " << words[i].getStr() << "  ";
+				length += words[i].getLength() + 5;
+			}
+			else {
+				cout << endl;
+				length = 0;
+			}
 		}
 	}
 	else {
