@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
 
 					default:
 						char ch = eventBuffer->Event.KeyEvent.uChar.AsciiChar;
-						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ') {
+						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ' || ch == '@' || ch == '*') {
 							if (undoFlag) {
 								undoFlag = false;
 								undoCount = 5;
@@ -263,7 +263,6 @@ int main(int argc, char* argv[]) {
 							}
 							else if (ch == '@') {
 								// word completion
-								String* words;
 								Node* temp = notepad.cursor->left; // the character before '@'
 								String word;
 								while (temp->value != ' ' && temp->value != '\0') {
@@ -271,7 +270,19 @@ int main(int argc, char* argv[]) {
 									temp = temp->left;
 								}
 								// now we have got the word before '@'
-
+								String* words = searchTree.getWords(word);
+								int tempX = 0, tempY = MAX_Y + 3;
+								gotoxy(tempX, tempY);
+								if (words) {
+									int count = searchTree.getCount(word);
+									for (int i = 0; i < count; i++) {
+										cout << words[i].getStr() << " ";
+									}
+								}
+								else {
+									cout << "No suggestions found";
+								}
+								gotoxy(notepad.cursorX, notepad.cursorY);
 							}
 						}
 						else if (ch == '1') {
