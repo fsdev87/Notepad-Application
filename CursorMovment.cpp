@@ -28,7 +28,6 @@ ChilliMilliTree graphTree;
 
 // Helper Functions
 
-// function to initialize window
 void initWindow() {
 	int i, j;
 	for (i = 0; i <= MAX_Y; i++) {
@@ -379,7 +378,21 @@ int main(int argc, char* argv[]) {
 								searchTree.insert(word);
 
 								String prevWord;
-								temp = temp->left;
+								if (temp->left) {
+									temp = temp->left;
+								}
+								else {
+									if (temp->up) {
+										temp = temp->up;
+										while (temp->right) {
+											temp = temp->right;
+										}
+										if (temp->value == ' ') {
+											temp = temp->left;
+										}
+									}
+									else temp = temp->left;
+								}
 								if (temp) {
 									while (temp->value != ' ' && temp->value != '\0') {
 										prevWord.appendStart(temp->value);
