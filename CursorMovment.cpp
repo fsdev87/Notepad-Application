@@ -1,6 +1,7 @@
 #include <iostream>
 #include <Windows.h>
 #include "Stack.h"
+#include "NAryTree.h"
 using namespace std;
 
 // Function prototypes
