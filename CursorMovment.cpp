@@ -86,7 +86,7 @@ void redo(Notepad& notepad) {
 }
 
 void clearSuggestionsArea() {
-	int tempX = 0, tempY = MAX_Y + 5;
+	int tempX = 0, tempY = MAX_Y + 6;
 	gotoxy(tempX, tempY);
 	for (int i = 0; i < MAX_X; i++) {
 		cout << " ";
@@ -116,19 +116,19 @@ void wordCompletion(char ch, Notepad& notepad) {
 	cout << ch;
 	// word completion
 	Node* temp = notepad.cursor; // the character at cursor
-	String word; // tal
+	String word;
 	while (temp->value != ' ' && temp->value != '\0') {
 		word.appendStart(temp->value);
 		temp = temp->left;
 	}
 	// now we have got the word before '@'
-	String* words = searchTree.getWords(word); // all words from tal
+	String* words = searchTree.getWords(word);
 	int count = searchTree.getCount(word);
 	clearSuggestionsArea(); // clear
 	printSuggestions(words, count); // print suggestions
 	if (count > 0) {
 		int suggestionChoice;
-		gotoxy(0, MAX_Y + 5);
+		gotoxy(0, MAX_Y + 6);
 		cout << "Enter your choice: ";
 		cin >> suggestionChoice;
 		// now we need to insert it in the notepad
@@ -159,8 +159,8 @@ void sentenceCompletion(char ch, Notepad& notepad) {
 	cout << ch;
 	// sentence completion
 	Node* temp = notepad.cursor->left; // the character at cursor ie ' '
-	String word; // tal
-	while (temp->value != ' ' && temp->value != '\0') {
+	String word;
+	while (temp && temp->value != ' ' && temp->value != '\0') {
 		if (temp->value >= 'A' && temp->value <= 'Z') {
 			word.appendStart(temp->value + 32);
 		}
@@ -172,14 +172,14 @@ void sentenceCompletion(char ch, Notepad& notepad) {
 	// now we have got the word before '*'
 	Vector* values = graphTree.getValues(word);
 	if (values) {
-		String* words = values->arr; // all words from tal
+		String* words = values->arr;
 		int count = values->size;
 
 		clearSuggestionsArea(); // clear
 		printSuggestions(words, count); // print suggestions
 		if (count > 0) {
 			int suggestionChoice;
-			gotoxy(0, MAX_Y + 5);
+			gotoxy(0, MAX_Y + 6);
 			cout << "Enter your choice: ";
 			cin >> suggestionChoice;
 			// now we need to insert it in the notepad
