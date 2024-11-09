@@ -10,12 +10,15 @@ void initWindow();
 void loadFile(Notepad& notepad, filesystem::path& filePath);
 void undo(Notepad& notepad);
 void redo(Notepad& notepad);
+void clearSuggestionsArea();
+void printSuggestions(String* words, int count);
 
 // Global variables
 Stack undoStack;
 Stack redoStack;
 int undoCount = 5;
 int redoCount = 5;
+//bool wordSuggestion = false;
 
 // Trees
 NAryTree searchTree;
@@ -77,6 +80,32 @@ void redo(Notepad& notepad) {
 	redoCount--;
 	if (undoCount < 5) {
 		undoCount++;
+	}
+}
+
+void clearSuggestionsArea() {
+	int tempX = 0, tempY = MAX_Y + 3;
+	gotoxy(tempX, tempY);
+	for (int i = 0; i < MAX_X; i++) {
+		cout << " ";
+	}
+	tempX = 0, tempY = MAX_Y + 5;
+	gotoxy(tempX, tempY);
+	for (int i = 0; i < MAX_X; i++) {
+		cout << " ";
+	}
+}
+
+void printSuggestions(String* words, int count) {
+	int tempX = 0, tempY = MAX_Y + 5;
+	gotoxy(tempX, tempY);
+	if (words) {
+		for (int i = 0; i < count; i++) {
+			cout << i + 1 << ". " << words[i].getStr() << "  ";
+		}
+	}
+	else {
+		cout << "No suggestions found";
 	}
 }
 
@@ -237,7 +266,7 @@ int main(int argc, char* argv[]) {
 
 					default:
 						char ch = eventBuffer->Event.KeyEvent.uChar.AsciiChar;
-						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ' || ch == '@' || ch == '*') {
+						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ') {
 							if (undoFlag) {
 								undoFlag = false;
 								undoCount = 5;
@@ -261,28 +290,46 @@ int main(int argc, char* argv[]) {
 								}
 								searchTree.insert(word);
 							}
-							else if (ch == '@') {
-								// word completion
-								Node* temp = notepad.cursor->left; // the character before '@'
-								String word;
-								while (temp->value != ' ' && temp->value != '\0') {
-									word.appendStart(temp->value);
-									temp = temp->left;
-								}
-								// now we have got the word before '@'
-								String* words = searchTree.getWords(word);
-								int tempX = 0, tempY = MAX_Y + 3;
-								gotoxy(tempX, tempY);
-								if (words) {
-									int count = searchTree.getCount(word);
-									for (int i = 0; i < count; i++) {
-										cout << words[i].getStr() << " ";
+						}
+						else if (ch == '@') {
+							cout << ch;
+							// word completion
+							Node* temp = notepad.cursor; // the character at cursor
+							String word; // tal
+							while (temp->value != ' ' && temp->value != '\0') {
+								word.appendStart(temp->value);
+								temp = temp->left;
+							}
+							// now we have got the word before '@'
+							String* words = searchTree.getWords(word); // all words from tal
+							int count = searchTree.getCount(word);
+							clearSuggestionsArea(); // clear
+							printSuggestions(words, count); // print suggestions
+							if (count > 0) {
+								int suggestionChoice;
+								gotoxy(0, MAX_Y + 3);
+								cout << "Enter your choice: ";
+								cin >> suggestionChoice;
+								// now we need to insert it in the notepad
+								if (suggestionChoice > 0 && suggestionChoice <= count) {
+									suggestionChoice--;
+									String selectedWord = words[suggestionChoice];
+									temp = notepad.cursor;
+									while (temp->value != ' ' && temp->value != '\0') {
+										notepad.deleteChar();
+										temp = notepad.cursor;
 									}
+									for (int i = 0; i < selectedWord.getLength(); i++) {
+										notepad.insertChar(selectedWord[i]);
+									}
+									clearSuggestionsArea();
+									notepad.printList();
+									gotoxy(notepad.cursorX, notepad.cursorY);
 								}
-								else {
-									cout << "No suggestions found";
-								}
+							}
+							else {
 								gotoxy(notepad.cursorX, notepad.cursorY);
+								cout << ' ';
 							}
 						}
 						else if (ch == '1') {
@@ -310,20 +357,20 @@ int main(int argc, char* argv[]) {
 		}
 
 	} // end program loop
-	String str = "tal";
+	/*String str = "tal";
 	int count = searchTree.getCount(str);
 	cout << "Count: " << count << endl;
 	String* words = searchTree.getWords(str);
 	if (words) {
 		for (int i = 0; i < count; i++) {
 			if (words[i].getStr()) {
-				cout << words[i].getStr() << endl;
+				cout << words[i].getStr() << "   ";
 			}
 		}
 	}
 	else {
 		cout << "No matches found" << endl;
-	}
+	}*/
 	searchTree.visualizeNAryTree();
 
 	return 0;
