@@ -105,6 +105,7 @@ void printSuggestions(String* words, int count) {
 		}
 	}
 	else {
+		gotoxy(0, MAX_Y + 3);
 		cout << "No suggestions found";
 	}
 }
@@ -330,6 +331,7 @@ int main(int argc, char* argv[]) {
 							else {
 								gotoxy(notepad.cursorX, notepad.cursorY);
 								cout << ' ';
+								gotoxy(notepad.cursorX, notepad.cursorY);
 							}
 						}
 						else if (ch == '1') {
