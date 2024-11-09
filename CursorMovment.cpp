@@ -86,12 +86,12 @@ void redo(Notepad& notepad) {
 }
 
 void clearSuggestionsArea() {
-	int tempX = 0, tempY = MAX_Y + 3;
+	int tempX = 0, tempY = MAX_Y + 5;
 	gotoxy(tempX, tempY);
 	for (int i = 0; i < MAX_X; i++) {
 		cout << " ";
 	}
-	tempX = 0, tempY = MAX_Y + 5;
+	tempX = 0, tempY = MAX_Y + 3;
 	gotoxy(tempX, tempY);
 	for (int i = 0; i < MAX_X; i++) {
 		cout << " ";
@@ -99,7 +99,7 @@ void clearSuggestionsArea() {
 }
 
 void printSuggestions(String* words, int count) {
-	int tempX = 0, tempY = MAX_Y + 5;
+	int tempX = 0, tempY = MAX_Y + 3;
 	gotoxy(tempX, tempY);
 	if (words) {
 		for (int i = 0; i < count; i++) {
@@ -128,7 +128,7 @@ void wordCompletion(char ch, Notepad& notepad) {
 	printSuggestions(words, count); // print suggestions
 	if (count > 0) {
 		int suggestionChoice;
-		gotoxy(0, MAX_Y + 3);
+		gotoxy(0, MAX_Y + 5);
 		cout << "Enter your choice: ";
 		cin >> suggestionChoice;
 		// now we need to insert it in the notepad
@@ -161,35 +161,43 @@ void sentenceCompletion(char ch, Notepad& notepad) {
 	Node* temp = notepad.cursor->left; // the character at cursor ie ' '
 	String word; // tal
 	while (temp->value != ' ' && temp->value != '\0') {
-		word.appendStart(temp->value);
+		if (temp->value >= 'A' && temp->value <= 'Z') {
+			word.appendStart(temp->value + 32);
+		}
+		else {
+			word.appendStart(temp->value);
+		}
 		temp = temp->left;
 	}
 	// now we have got the word before '*'
 	Vector* values = graphTree.getValues(word);
-	String* words = values->arr; // all words from tal
-	int count = values->size;
+	if (values) {
+		String* words = values->arr; // all words from tal
+		int count = values->size;
 
-	clearSuggestionsArea(); // clear
-	printSuggestions(words, count); // print suggestions
-	if (count > 0) {
-		int suggestionChoice;
-		gotoxy(0, MAX_Y + 3);
-		cout << "Enter your choice: ";
-		cin >> suggestionChoice;
-		// now we need to insert it in the notepad
-		if (suggestionChoice > 0 && suggestionChoice <= count) {
-			suggestionChoice--;
-			String selectedWord = words[suggestionChoice];
-			temp = notepad.cursor;
-			for (int i = 0; i < selectedWord.getLength(); i++) {
-				notepad.insertChar(selectedWord[i]);
+		clearSuggestionsArea(); // clear
+		printSuggestions(words, count); // print suggestions
+		if (count > 0) {
+			int suggestionChoice;
+			gotoxy(0, MAX_Y + 5);
+			cout << "Enter your choice: ";
+			cin >> suggestionChoice;
+			// now we need to insert it in the notepad
+			if (suggestionChoice > 0 && suggestionChoice <= count) {
+				suggestionChoice--;
+				String selectedWord = words[suggestionChoice];
+				temp = notepad.cursor;
+				for (int i = 0; i < selectedWord.getLength(); i++) {
+					notepad.insertChar(selectedWord[i]);
+				}
+				clearSuggestionsArea();
+				notepad.printList();
+				gotoxy(notepad.cursorX, notepad.cursorY);
 			}
-			clearSuggestionsArea();
-			notepad.printList();
-			gotoxy(notepad.cursorX, notepad.cursorY);
 		}
 	}
 	else {
+		printSuggestions(nullptr, 0);
 		gotoxy(notepad.cursorX, notepad.cursorY);
 		cout << ' ';
 		gotoxy(notepad.cursorX, notepad.cursorY);
@@ -433,20 +441,7 @@ int main(int argc, char* argv[]) {
 		}
 
 	} // end program loop
-	/*String str = "tal";
-	int count = searchTree.getCount(str);
-	cout << "Count: " << count << endl;
-	String* words = searchTree.getWords(str);
-	if (words) {
-		for (int i = 0; i < count; i++) {
-			if (words[i].getStr()) {
-				cout << words[i].getStr() << "   ";
-			}
-		}
-	}
-	else {
-		cout << "No matches found" << endl;
-	}*/
+
 	graphTree.print();
 	searchTree.visualizeNAryTree();
 	return 0;
