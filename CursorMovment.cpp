@@ -12,15 +12,18 @@ void loadFile(Notepad& notepad, filesystem::path& filePath);
 void undo(Notepad& notepad);
 void redo(Notepad& notepad);
 void clearSuggestionsArea();
+void clearSearchArea();
 void printSuggestions(String* words, int count);
 void wordCompletion(char ch, Notepad& notepad);
 void sentenceCompletion(char ch, Notepad& notepad);
+void search(Notepad& notepad);
 
 // Global variables
 Stack undoStack;
 Stack redoStack;
 int undoCount = 5;
 int redoCount = 5;
+bool searching = false;
 
 // Trees
 NAryTree searchTree;
@@ -100,6 +103,22 @@ void clearSuggestionsArea() {
 	gotoxy(tempX, tempY);
 	for (int i = 0; i < MAX_X; i++) {
 		cout << " ";
+	}
+	tempX = 0, tempY = MAX_Y + 5;
+	gotoxy(tempX, tempY);
+	for (int i = 0; i < MAX_X; i++) {
+		cout << " ";
+	}
+
+}
+
+void clearSearchArea() {
+	int tempX = MAX_X + 1, tempY;
+	for (tempY = 2; tempY < MAX_Y; tempY++) {
+		gotoxy(tempX, tempY);
+		for (int i = 0; i < 21; i++) {
+			cout << " ";
+		}
 	}
 }
 
@@ -183,7 +202,7 @@ void sentenceCompletion(char ch, Notepad& notepad) {
 		temp = temp->left;
 	}
 	// now we have got the word before '*'
-	Vector* values = graphTree.getValues(word);
+	Vector<String>* values = graphTree.getValues(word);
 	if (values) {
 		String* words = values->arr;
 		int count = values->size;
@@ -214,6 +233,87 @@ void sentenceCompletion(char ch, Notepad& notepad) {
 		gotoxy(notepad.cursorX, notepad.cursorY);
 		cout << ' ';
 		gotoxy(notepad.cursorX, notepad.cursorY);
+	}
+}
+
+void search(Notepad& notepad) {
+	gotoxy(MAX_X + 1, 2);
+	cout << "Enter word to search:";
+	gotoxy(MAX_X + 1, 3);
+	char ptr[50];
+	cin >> ptr;
+	String word(ptr);
+	Vector<int>* lineNumbers = searchTree.searchWord(word);
+	if (lineNumbers) {
+		gotoxy(MAX_X + 1, 5);
+		cout << "Found on:";
+		int y = 6;
+		for (int i = 0; i < lineNumbers->size; i++) {
+			gotoxy(MAX_X + 1, y++);
+			cout << "Line " << lineNumbers->arr[i] + 1;
+		}
+		notepad.clearScreen();
+		// print list differently
+		gotoxy(1, 0);
+		y = 0;
+		Node* current = notepad.head;
+		while (current) {
+			Node* rowNode = current;
+			rowNode = rowNode->right;
+			while (rowNode) {
+				if (word.getLength() < 1) {
+					cout << rowNode->value;
+					rowNode = rowNode->right;
+				}
+				else if (word.getLength() == 1) {
+					if (word[0] == rowNode->value) {
+						cout << "\033[33m" << rowNode->value << "\033[0m";
+					}
+					else {
+						cout << rowNode->value;
+					}
+					rowNode = rowNode->right;
+				}
+				else {
+					bool found = true;
+					int i = 0;
+					if (word[i] == rowNode->value) {
+						Node* temp = rowNode;
+						while (temp && i < word.getLength()) {
+							if (temp->value != word[i]) {
+								found = false;
+								break;
+							}
+							i++;
+							temp = temp->right;
+						}
+						if (found) {
+							int j = 0;
+							while (j < i) {
+								cout << "\033[33m" << rowNode->value << "\033[0m";
+								rowNode = rowNode->right;
+								j++;
+							}
+						}
+						else {
+							cout << rowNode->value;
+							rowNode = rowNode->right;
+						}
+					}
+					else {
+						cout << rowNode->value;
+						rowNode = rowNode->right;
+					}
+				}
+
+			}
+			gotoxy(1, ++y);
+			current = current->down;
+		}
+	}
+	else {
+		gotoxy(MAX_X + 1, 4);
+		cout << "No results found...";
 	}
 }
 
@@ -308,73 +408,98 @@ int main(int argc, char* argv[]) {
 					switch (eventBuffer[i].Event.KeyEvent.wVirtualKeyCode) {
 
 					case VK_UP: //up
-						notepad.goUp();
+						if (!searching) {
+							notepad.goUp();
+						}
 						break;
 
 					case VK_DOWN: //down
-						notepad.goDown();
+						if (!searching) {
+							notepad.goDown();
+						}
 						break;
 
 					case VK_RIGHT: //right
-						notepad.goRight();
+						if (!searching) {
+							notepad.goRight();
+						}
 						break;
 
 					case VK_LEFT: //left
-						notepad.goLeft();
+						if (!searching) {
+							notepad.goLeft();
+						}
 						break;
 
 					case VK_RETURN:
-						if (undoFlag) {
-							undoFlag = false;
-							undoCount = 5;
-							undoStack.clearStack();
+						if (!searching) {
+							if (undoFlag) {
+								undoFlag = false;
+								undoCount = 5;
+								undoStack.clearStack();
+								undoStack.push(notepad);
+								redoCount = 5;
+								redoStack.clearStack();
+							}
 							undoStack.push(notepad);
-							redoCount = 5;
-							redoStack.clearStack();
+							notepad.createNewLine();
+							notepad.printList();
+							gotoxy(notepad.cursorX, notepad.cursorY);
 						}
-						undoStack.push(notepad);
-						notepad.createNewLine();
-						notepad.printList();
-						gotoxy(notepad.cursorX, notepad.cursorY);
+						break;
+
+					case VK_TAB:
+						// Search case
+						searching = true;
+						search(notepad);
 						break;
 
 					case VK_BACK:
-						if (undoFlag) {
-							undoFlag = false;
-							undoCount = 5;
-							undoStack.clearStack();
-							undoStack.push(notepad);
-							redoCount = 5;
-							redoStack.clearStack();
+						if (!searching) {
+							if (undoFlag) {
+								undoFlag = false;
+								undoCount = 5;
+								undoStack.clearStack();
+								undoStack.push(notepad);
+								redoCount = 5;
+								redoStack.clearStack();
+							}
+							if (notepad.cursor->value == ' ') {
+								undoStack.push(notepad);
+							}
+							else if (notepad.cursor->value == '\0' && notepad.cursor->createdByEnter) {
+								undoStack.push(notepad);
+							}
+							//deletedChar = notepad.deleteChar();
+							notepad.deleteChar();
+							notepad.printList();
+							gotoxy(notepad.cursorX, notepad.cursorY);
 						}
-						if (notepad.cursor->value == ' ') {
-							undoStack.push(notepad);
-						}
-						else if (notepad.cursor->value == '\0' && notepad.cursor->createdByEnter) {
-							undoStack.push(notepad);
-						}
-						//deletedChar = notepad.deleteChar();
-						notepad.deleteChar();
-						notepad.printList();
-						gotoxy(notepad.cursorX, notepad.cursorY);
 						break;
 
 					case VK_ESCAPE: //escape
-						Running = false;
-						system("cls");
-						gotoxy(0, 0);
-						cout << "Do you want to save the file? (y/n): ";
-						cin >> choice;
-						if (choice == 'y' || choice == 'Y') {
-							cout << "Enter the name of file you want to save: ";
-							cin >> filePath;
-							notepad.saveToFile(filePath);
+						if (searching) {
+							searching = false;
+							clearSearchArea();
+							notepad.printList();
+						}
+						else {
+							Running = false;
+							system("cls");
+							gotoxy(0, 0);
+							cout << "Do you want to save the file? (y/n): ";
+							cin >> choice;
+							if (choice == 'y' || choice == 'Y') {
+								cout << "Enter the name of file you want to save: ";
+								cin >> filePath;
+								notepad.saveToFile(filePath);
+							}
 						}
 						break;
 
 					default:
 						char ch = eventBuffer->Event.KeyEvent.uChar.AsciiChar;
-						if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ') {
+						if (((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ') && !searching) {
 							if (undoFlag) {
 								undoFlag = false;
 								undoCount = 5;
@@ -396,7 +521,7 @@ int main(int argc, char* argv[]) {
 									word.appendStart(temp->value);
 									temp = temp->left;
 								}
-								searchTree.insert(word);
+								searchTree.insert(word, notepad.cursorY);
 
 								String prevWord;
 								if (temp->left) {
@@ -423,13 +548,13 @@ int main(int argc, char* argv[]) {
 								}
 							}
 						}
-						else if (ch == '@') {
+						else if (ch == '@' && !searching) {
 							wordCompletion(ch, notepad);
 						}
-						else if (ch == '*') {
+						else if (ch == '*' && !searching) {
 							sentenceCompletion(ch, notepad);
 						}
-						else if (ch == '1') {
+						else if (ch == '1' && !searching) {
 							if (!undoFlag) {
 								undoFlag = true;
 							}
@@ -437,7 +562,7 @@ int main(int argc, char* argv[]) {
 							notepad.printList();
 							gotoxy(notepad.cursorX, notepad.cursorY);
 						}
-						else if (ch == '2') {
+						else if (ch == '2' && !searching) {
 							if (!redoFlag) {
 								redoFlag = true;
 							}
@@ -454,6 +579,8 @@ int main(int argc, char* argv[]) {
 		}
 
 	} // end program loop
+
+	searchTree.dfs(searchTree.root);
 
 	graphTree.print();
 	searchTree.visualizeNAryTree();

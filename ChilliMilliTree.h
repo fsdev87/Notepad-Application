@@ -1,67 +1,15 @@
 #pragma once
 #include <iostream>
+#include "Vector.h"
 #include "codes/String.h"
 using namespace std;
 
-// i want a map that has String type keys, and Vector<String> type values, and both
-// must be dynamically increasing whenever a key is being added to the map
-// also the vector should not be the stl vector, rather we need to create our own vector
-// class
-
-class Vector {
-public:
-	String* arr;
-	int size;
-	int capacity;
-
-	Vector() {
-		size = 0;
-		capacity = 1;
-		arr = new String[capacity];
-	}
-
-	void push_back(const String& str) {
-		if (size == capacity) {
-			capacity *= 2;
-			String* temp = new String[capacity];
-			for (int i = 0; i < size; i++) {
-				temp[i] = arr[i];
-			}
-			delete[] arr;
-			arr = temp;
-		}
-		arr[size++] = str;
-	}
-
-	String& operator[](int idx) {
-		return arr[idx];
-	}
-
-	Vector& operator=(const Vector& other) {
-		if (this != &other) {
-			delete[] arr;
-			size = other.size;
-			capacity = other.capacity;
-			arr = new String[capacity];
-			for (int i = 0; i < size; i++) {
-				arr[i] = other.arr[i];
-			}
-		}
-		return *this;
-	}
-
-	~Vector() {
-		delete[] arr;
-	}
-};
-
-// perfect, now we need to build the map class
 class ChilliMilliTree {
 private:
 	void resize() {
 		int newSize = capacity * 2;
 		String* tempKeys = new String[newSize];
-		Vector* tempValues = new Vector[newSize];
+		Vector<String>* tempValues = new Vector<String>[newSize];
 		for (int i = 0; i < size; i++) {
 			tempKeys[i] = keys[i];
 			tempValues[i] = values[i];
@@ -75,7 +23,7 @@ private:
 
 public:
 	String* keys;
-	Vector* values;
+	Vector<String>* values;
 	int size;
 	int capacity;
 
@@ -91,7 +39,7 @@ public:
 			size = 0;
 			capacity = 1;
 			keys = new String[capacity];
-			values = new Vector[capacity];
+			values = new Vector<String>[capacity];
 			keys[size] = key;
 			values[size].push_back(value);
 			size++;
@@ -116,7 +64,7 @@ public:
 		size++;
 	}
 
-	Vector* getValues(const String& key) {
+	Vector<String>* getValues(const String& key) {
 		for (int i = 0; i < size; i++) {
 			if (keys[i] == key) {
 				return &values[i];

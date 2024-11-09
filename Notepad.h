@@ -350,7 +350,7 @@ public:
 	}
 
 	// print the whole 2d list
-	void printList() {
+	void clearScreen() {
 		int lines = getNoOfLines();
 		int y = 0;
 		Node* row = head;
@@ -369,9 +369,12 @@ public:
 				}
 			}
 		}
+	}
 
-		y = 0;
-		row = head;
+	void printList() {
+		clearScreen();
+		int y = 0;
+		Node* row = head;
 		while (row && y < MAX_Y) {
 			gotoxy(1, y++);
 			Node* col = row;
