@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "Stack.h"
 #include "NAryTree.h"
+#include "codes/String.h"
 using namespace std;
 
 // Function prototypes
@@ -15,6 +16,9 @@ Stack undoStack;
 Stack redoStack;
 int undoCount = 5;
 int redoCount = 5;
+
+// Trees
+NAryTree searchTree;
 
 // Helper Functions
 
@@ -143,7 +147,7 @@ int main(int argc, char* argv[]) {
 	bool redoFlag = false;
 
 	gotoxy(notepad.cursorX, notepad.cursorY);
-	//programs main loop
+	// programs main loop
 	while (Running) {
 
 		// gets the systems current "event" count
@@ -248,6 +252,27 @@ int main(int argc, char* argv[]) {
 							if (ch == ' ' && notepad.cursor->left->value != ' ') {
 								undoStack.push(notepad);
 							}
+							if (ch == ' ') {
+								String word;
+								Node* temp = notepad.cursor->left;
+								while (temp->value != ' ' && temp->value != '\0') {
+									word.appendStart(temp->value);
+									temp = temp->left;
+								}
+								searchTree.insert(word);
+							}
+							else if (ch == '@') {
+								// word completion
+								String* words;
+								Node* temp = notepad.cursor->left; // the character before '@'
+								String word;
+								while (temp->value != ' ' && temp->value != '\0') {
+									word.appendStart(temp->value);
+									temp = temp->left;
+								}
+								// now we have got the word before '@'
+
+							}
 						}
 						else if (ch == '1') {
 							if (!undoFlag) {
@@ -274,6 +299,21 @@ int main(int argc, char* argv[]) {
 		}
 
 	} // end program loop
+	String str = "tal";
+	int count = searchTree.getCount(str);
+	cout << "Count: " << count << endl;
+	String* words = searchTree.getWords(str);
+	if (words) {
+		for (int i = 0; i < count; i++) {
+			if (words[i].getStr()) {
+				cout << words[i].getStr() << endl;
+			}
+		}
+	}
+	else {
+		cout << "No matches found" << endl;
+	}
+	searchTree.visualizeNAryTree();
 
 	return 0;
 }

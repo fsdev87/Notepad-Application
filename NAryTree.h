@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <queue>
+#include "codes/String.h"
 using namespace std;
 
 struct TNode {
@@ -18,36 +19,159 @@ struct TNode {
 	}
 };
 
-class Trie {
+class NAryTree {
 	typedef TNode* ptr;
 private:
 	ptr root;
 public:
-	Trie() {
+	NAryTree() {
 		root = new TNode(' ');
 	}
-	void insert(string word) {
+	void insert(String word) {
 		int i = 0;
-		ptr curr = root;
-		while (i < word.length()) {
-			if (curr->next[word[i] - 'a'] == nullptr) {
-				curr->next[word[i] - 'a'] = new TNode(word[i]);
+		ptr current = root;
+		while (i < word.getLength()) {
+			char ch;
+			if (word[i] >= 'A' && word[i] <= 'Z') {
+				ch = 'A';
 			}
-			curr = curr->next[word[i] - 'a'];
+			else {
+				ch = 'a';
+			}
+			if (current->next[word[i] - ch] == nullptr) {
+				current->next[word[i] - ch] = new TNode(word[i]);
+			}
+			current = current->next[word[i] - ch];
 			i++;
 		}
-		curr->end = true;
+		current->end = true;
 	}
-	bool search(string word) {
-		ptr curr = root;
-		for (int i = 0; i < word.length(); i++) {
-			if (curr->next[word[i] - 'a'] == nullptr) {
+	bool search(String word) {
+		ptr current = root;
+		for (int i = 0; i < word.getLength(); i++) {
+			char ch;
+			if (word[i] >= 'A' && word[i] <= 'Z') {
+				ch = 'A';
+			}
+			else {
+				ch = 'a';
+			}
+			if (current->next[word[i] - ch] == nullptr) {
 				return false;
 			}
-			curr = curr->next[word[i] - 'a'];
+			current = current->next[word[i] - ch];
 		}
-		return curr->end;
+		return current->end;
 	}
+
+	int getCount(String word) {
+		ptr current = root;
+		for (int i = 0; i < word.getLength(); i++) {
+			char ch;
+			if (word[i] >= 'A' && word[i] <= 'Z') {
+				ch = 'A';
+			}
+			else {
+				ch = 'a';
+			}
+			if (current->next[word[i] - ch] == nullptr) {
+				return 0;
+			}
+			current = current->next[word[i] - ch];
+		}
+		return countWords(current);
+	}
+
+	int countWords(ptr root) {
+		if (root == nullptr) {
+			return 0;
+		}
+		int count = 0;
+		if (root->end) {
+			count++;
+		}
+		for (int i = 0; i < 26; i++) {
+			count += countWords(root->next[i]);
+		}
+		return count;
+	}
+
+	String* getWords(String word) {
+		/*if (!search(word)) {
+			cout << "Not found \n";
+			return nullptr;
+		}*/
+		int noOfWords = getCount(word);
+		if (noOfWords == 0) {
+			return nullptr;
+		}
+		String* words = new String[noOfWords];
+
+		// Traverse to the last character of the prefix word
+		ptr current = root;
+		for (int i = 0; i < word.getLength(); i++) {
+			char ch;
+			if (word[i] >= 'A' && word[i] <= 'Z') {
+				ch = 'A';
+			}
+			else {
+				ch = 'a';
+			}
+			current = current->next[word[i] - ch];
+		}
+
+		int idx = 0;
+		findWords(current, words, idx, word); // Fill words starting from the given prefix
+		return words;
+	}
+
+	void findWords(ptr root, String* words, int& idx, String word) {
+		if (root == nullptr) {
+			return;
+		}
+		if (root->end) {
+			words[idx++] = word; // Store the current word in words array
+		}
+		for (int i = 0; i < 26; i++) {
+			if (root->next[i] != nullptr) {
+				findWords(root->next[i], words, idx, word + root->next[i]->key);
+			}
+		}
+	}
+
+	//String* getWords(String word) {
+	//	if (!search(word)) {
+	//		return nullptr;
+	//	}
+	//	int noOfWords = getCount(word);
+	//	String* words = new String[noOfWords];
+	//	// now we have to find all the words that start with the given word
+	//	ptr current = root;
+	//	for (int i = 0; i < word.getLength(); i++) {
+	//		char ch;
+	//		if (word[i] >= 'A' && word[i] <= 'Z') {
+	//			ch = 'A';
+	//		}
+	//		else {
+	//			ch = 'a';
+	//		}
+	//		current = current->next[word[i] - ch];
+	//	}
+	//	int idx = 0;
+	//	findWords(current, words, idx, word);
+	//}
+
+	//void findWords(ptr root, String* words, int& idx, String word) {
+	//	if (root == nullptr) {
+	//		return;
+	//	}
+	//	if (root->end) {
+	//		words[idx++] = word;
+	//	}
+	//	for (int i = 0; i < 26; i++) {
+	//		findWords(root->next[i], words, idx, word + root->next[i]->key);
+	//	}
+	//}
 
 	int height() {
 		return getHeight(root);
@@ -65,7 +189,7 @@ public:
 
 	string generateDotCode() {
 		stringstream dotCode;
-		dotCode << "digraph Trie {\n";
+		dotCode << "digraph NAryTree {\n";
 		dotCode << "  node [shape=circle];\n";
 		queue<ptr> q;
 		queue<int> idq;
@@ -100,7 +224,7 @@ public:
 		return dotCode.str();
 	}
 
-	void visualizeTrie() {
+	void visualizeNAryTree() {
 		string dotCode = generateDotCode();
 
 		// Save Dot code to a file
@@ -116,14 +240,14 @@ public:
 };
 
 //int main() {
-//	Trie t;
+//	NAryTree t;
 //	for (auto word : { "banana", "bandit", "daniyal", "ban" }) {
 //		t.insert(word);
 //	}
 //	cout << boolalpha << t.search("hello") << endl;
 //	cout << boolalpha << t.search("mustafa") << endl;
 //	cout << boolalpha << t.search("thison") << endl;
-//	t.visualizeTrie();
+//	t.visualizeNAryTree();
 //	cout << t.height() << endl;
 //	cout << string(10, 'z');
 //	return 0;
