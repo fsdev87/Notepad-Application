@@ -22,17 +22,15 @@ struct TNode {
 };
 
 class NAryTree {
-	typedef TNode* ptr;
-private:
 public:
-	ptr root;
+	TNode* root;
+
 	NAryTree() {
 		root = new TNode(' ');
 	}
-	void insert(String word, int lineNumber) {
-		int i = 0;
-		ptr current = root;
-		while (i < word.getLength()) {
+	void insert(String word, int lineNumber = 0) {
+		TNode* current = root;
+		for (int i = 0; i < word.getLength(); i++) {
 			char ch;
 			if (word[i] >= 'A' && word[i] <= 'Z') {
 				ch = 'A';
@@ -45,12 +43,12 @@ public:
 			}
 			current->next[word[i] - ch]->lineNumbers.push_back(lineNumber);
 			current = current->next[word[i] - ch];
-			i++;
 		}
 		current->end = true;
 	}
+
 	bool search(String word) {
-		ptr current = root;
+		TNode* current = root;
 		for (int i = 0; i < word.getLength(); i++) {
 			char ch;
 			if (word[i] >= 'A' && word[i] <= 'Z') {
@@ -64,11 +62,14 @@ public:
 			}
 			current = current->next[word[i] - ch];
 		}
-		return current->end;
+		if (current->end) {
+			return true;
+		}
+		return false;
 	}
 
 	int getCount(String word) {
-		ptr current = root;
+		TNode* current = root;
 		for (int i = 0; i < word.getLength(); i++) {
 			char ch;
 			if (word[i] >= 'A' && word[i] <= 'Z') {
@@ -85,12 +86,12 @@ public:
 		return countWords(current);
 	}
 
-	int countWords(ptr root) {
+	int countWords(TNode* root) {
 		if (root == nullptr) {
 			return 0;
 		}
 		int count = 0;
-		if (root->end) {
+		if (root->end == true) {
 			count++;
 		}
 		for (int i = 0; i < 26; i++) {
@@ -106,7 +107,7 @@ public:
 		}
 		String* words = new String[noOfWords];
 
-		ptr current = root;
+		TNode* current = root;
 		for (int i = 0; i < word.getLength(); i++) {
 			char ch;
 			if (word[i] >= 'A' && word[i] <= 'Z') {
@@ -123,7 +124,7 @@ public:
 		return words;
 	}
 
-	void findWords(ptr root, String* words, int& idx, String word) {
+	void findWords(TNode* root, String* words, int& idx, String word) {
 		if (root == nullptr) {
 			return;
 		}
@@ -137,7 +138,7 @@ public:
 		}
 	}
 
-	void dfs(ptr root) {
+	void dfs(TNode* root) {
 		// we simply need to print all nodes in the tree
 		if (root == nullptr) {
 			return;
@@ -152,73 +153,91 @@ public:
 		}
 	}
 
+	void print(TNode* root, Vector<char> word) {
+		if (root == nullptr) {
+			return;
+		}
+		word.insert(root->key);
+		if (root->end) {
+			for (int i = 0; i < word.size; i++) {
+				cout << word[i] << " -> ";
+			}
+			cout << endl;
+		}
+		else {
+			for (int i = 0; i < 26; i++) {
+				print(root->next[i], word);
+			}
+		}
+		word.pop_back();
+	}
+
 	Vector<int>* searchWord(String word) {
-		ptr current = root;
-		if (!current) return nullptr;
+		TNode* current = root;
+		if (current == nullptr) return nullptr;
 
-		Vector<int>* common_positions = nullptr;
-
-		for (int i = 0; i < word.getLength(); ++i) {
+		Vector<int>* commonPos = nullptr;
+		int i = 0;
+		while (i < word.getLength()) {
 			char c = word[i];
-			int index = c >= 'A' && c <= 'Z' ? c - 'A' : c - 'a';
+			int index;
+			if (c >= 'A' && c <= 'Z') {
+				index = c - 'A';
+			}
+			else {
+				index = c - 'a';
+			}
 
-			// If there's no node for this character, word doesn't exist in trie
-			if (!current->next[index]) {
+			if (current->next[index] == nullptr) {
 				return nullptr;
 			}
 
-			// Move to the next character's node
 			current = current->next[index];
 
-			// Initialize or intersect positions
-			if (i == 0) {
-				// Initialize with the first character's positions
-				common_positions = new Vector<int>(current->lineNumbers);
-			}
-			else {
-				// Intersect with the currentent character's positions
-				Vector<int> new_common_positions;
-				int j = 0, k = 0;
+			if (i != 0) {
+				Vector<int> tempCommonPos;
+				int x = 0, y = 0;
 
-				// Perform an intersection of common_positions and current->lineNumbers
-				while (j < common_positions->size && k < current->lineNumbers.size) {
-					if ((*common_positions)[j] == current->lineNumbers[k]) {
-						new_common_positions.push_back((*common_positions)[j]);
-						j++;
-						k++;
+				while (x < commonPos->size && y < current->lineNumbers.size) {
+					if ((*commonPos)[x] == current->lineNumbers[y]) {
+						tempCommonPos.push_back((*commonPos)[x]);
+						x++;
+						y++;
 					}
-					else if ((*common_positions)[j] < current->lineNumbers[k]) {
-						j++;
+					else if ((*commonPos)[x] < current->lineNumbers[y]) {
+						x++;
 					}
 					else {
-						k++;
+						y++;
 					}
 				}
 
-				// If intersection is empty, we can exit early
-				if (new_common_positions.size == 0) {
-					delete common_positions;
+				if (!tempCommonPos.size) {
+					delete commonPos;
 					return nullptr;
 				}
 
-				// Update common_positions with the intersection result
-				*common_positions = new_common_positions;
+				*commonPos = tempCommonPos;
 			}
+			else {
+				commonPos = new Vector<int>(current->lineNumbers);
+			}
+			i++;
 		}
-		return common_positions;
+		return commonPos;
 	}
 
 	string generateDotCode() {
 		stringstream dotCode;
 		dotCode << "digraph NAryTree {\n";
 		dotCode << "  node [shape=circle];\n";
-		queue<ptr> q;
+		queue<TNode*> q;
 		queue<int> idq;
 		q.push(root);
 		int id = 0;
 		idq.push(id);
 		while (!q.empty()) {
-			ptr current = q.front();
+			TNode* current = q.front();
 			q.pop();
 			int thisId = idq.front();
 			idq.pop();
@@ -259,17 +278,3 @@ public:
 		cout << "Graph image saved to 'trie.png'.\n";
 	}
 };
-
-//int height() {
-//	return getHeight(root);
-//}
-//int getHeight(ptr root) {
-//	if (root == nullptr) {
-//		return -1;
-//	}
-//	int maxHeight = INT_MIN;
-//	for (int i = 0; i < 26; i++) {
-//		maxHeight = max(maxHeight, getHeight(root->next[i]) + 1);
-//	}
-//	return maxHeight;
-//}

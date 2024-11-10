@@ -24,6 +24,8 @@ Stack redoStack;
 int undoCount = 5;
 int redoCount = 5;
 bool searching = false;
+bool firstTime = true;
+char ptr[50]{};
 
 // Trees
 NAryTree searchTree;
@@ -89,27 +91,13 @@ void redo(Notepad& notepad) {
 }
 
 void clearSuggestionsArea() {
-	int tempX = 0, tempY = MAX_Y + 6;
-	gotoxy(tempX, tempY);
-	for (int i = 0; i < MAX_X; i++) {
-		cout << " ";
+	int tempX = 0, tempY;
+	for (tempY = MAX_Y + 3; tempY <= MAX_Y + 6; tempY++) {
+		gotoxy(tempX, tempY);
+		for (int i = 0; i < MAX_X + 10; i++) {
+			cout << " ";
+		}
 	}
-	tempX = 0, tempY = MAX_Y + 3;
-	gotoxy(tempX, tempY);
-	for (int i = 0; i < MAX_X; i++) {
-		cout << " ";
-	}
-	tempX = 0, tempY = MAX_Y + 4;
-	gotoxy(tempX, tempY);
-	for (int i = 0; i < MAX_X; i++) {
-		cout << " ";
-	}
-	tempX = 0, tempY = MAX_Y + 5;
-	gotoxy(tempX, tempY);
-	for (int i = 0; i < MAX_X; i++) {
-		cout << " ";
-	}
-
 }
 
 void clearSearchArea() {
@@ -240,8 +228,14 @@ void search(Notepad& notepad) {
 	gotoxy(MAX_X + 1, 2);
 	cout << "Enter word to search:";
 	gotoxy(MAX_X + 1, 3);
-	char ptr[50];
-	cin >> ptr;
+	if (firstTime) {
+		firstTime = false;
+		cin.getline(ptr, 50);
+		cin.getline(ptr, 50);
+	}
+	else {
+		cin.getline(ptr, 50);
+	}
 	String word(ptr);
 	Vector<int>* lineNumbers = searchTree.searchWord(word);
 	if (lineNumbers) {
@@ -252,68 +246,66 @@ void search(Notepad& notepad) {
 			gotoxy(MAX_X + 1, y++);
 			cout << "Line " << lineNumbers->arr[i] + 1;
 		}
-		notepad.clearScreen();
-		// print list differently
-		gotoxy(1, 0);
-		y = 0;
-		Node* current = notepad.head;
-		while (current) {
-			Node* rowNode = current;
-			rowNode = rowNode->right;
-			while (rowNode) {
-				if (word.getLength() < 1) {
-					cout << rowNode->value;
-					rowNode = rowNode->right;
-				}
-				else if (word.getLength() == 1) {
-					if (word[0] == rowNode->value) {
-						cout << "\033[33m" << rowNode->value << "\033[0m";
-					}
-					else {
-						cout << rowNode->value;
-					}
-					rowNode = rowNode->right;
-				}
-				else {
-					bool found = true;
-					int i = 0;
-					if (word[i] == rowNode->value) {
-						Node* temp = rowNode;
-						while (temp && i < word.getLength()) {
-							if (temp->value != word[i]) {
-								found = false;
-								break;
-							}
-							i++;
-							temp = temp->right;
-						}
-						if (found) {
-							int j = 0;
-							while (j < i) {
-								cout << "\033[33m" << rowNode->value << "\033[0m";
-								rowNode = rowNode->right;
-								j++;
-							}
-						}
-						else {
-							cout << rowNode->value;
-							rowNode = rowNode->right;
-						}
-					}
-					else {
-						cout << rowNode->value;
-						rowNode = rowNode->right;
-					}
-				}
-
-			}
-			gotoxy(1, ++y);
-			current = current->down;
-		}
 	}
 	else {
-		gotoxy(MAX_X + 1, 4);
+		gotoxy(MAX_X + 1, 5);
 		cout << "No results found...";
+	}
+	notepad.clearScreen();
+	// print list differently
+	gotoxy(1, 0);
+	int y = 0;
+	Node* row = notepad.head;
+	while (row) {
+		Node* col = row;
+		col = col->right;
+		while (col) {
+			if (word.getLength() < 1) {
+				cout << col->value;
+				col = col->right;
+			}
+			else if (word.getLength() == 1) {
+				if (word[0] == col->value) {
+					cout << "\033[33m" << col->value << "\033[0m";
+				}
+				else {
+					cout << col->value;
+				}
+				col = col->right;
+			}
+			else {
+				bool found = true;
+				int i = 0;
+				if (word[i] == col->value) {
+					Node* temp = col;
+					while (temp != nullptr && i < word.getLength()) {
+						if (temp->value != word[i]) {
+							found = false;
+							break;
+						}
+						i++;
+						temp = temp->right;
+					}
+					if (found == true) {
+						for (int j = 0; j < i; j++) {
+							cout << "\033[33m" << col->value << "\033[0m";
+							col = col->right;
+						}
+					}
+					else {
+						cout << col->value;
+						col = col->right;
+					}
+				}
+				else {
+					cout << col->value;
+					col = col->right;
+				}
+			}
+
+		}
+		gotoxy(1, ++y);
+		row = row->down;
 	}
 }
 
@@ -450,8 +442,10 @@ int main(int argc, char* argv[]) {
 
 					case VK_TAB:
 						// Search case
-						searching = true;
-						search(notepad);
+						if (!searching) {
+							searching = true;
+							search(notepad);
+						}
 						break;
 
 					case VK_BACK:
@@ -580,8 +574,9 @@ int main(int argc, char* argv[]) {
 
 	} // end program loop
 
-	searchTree.dfs(searchTree.root);
-
+	//searchTree.dfs(searchTree.root);
+	Vector<char> vec;
+	searchTree.print(searchTree.root, vec);
 	graphTree.print();
 	searchTree.visualizeNAryTree();
 	return 0;

@@ -31,6 +31,19 @@ public:
 		arr[size++] = val;
 	}
 
+	void insert(const T& val) {
+		if (size == capacity) {
+			capacity *= 2;
+			T* temp = new T[capacity];
+			for (int i = 0; i < size; i++) {
+				temp[i] = arr[i];
+			}
+			//delete[] arr;
+			arr = temp;
+		}
+		arr[size++] = val;
+	}
+
 	bool exists(const T& val) {
 		for (int i = 0; i < size; i++) {
 			if (arr[i] == val) {
@@ -40,18 +53,24 @@ public:
 		return false;
 	}
 
+	void pop_back() {
+		if (size > 0) {
+			size--;
+		}
+	}
+
 	T& operator[](int idx) {
-		return arr[idx];
+		return *(arr + idx);
 	}
 
 	Vector& operator=(const Vector& other) {
 		if (this != &other) {
 			//delete[] arr;
-			size = other.size;
-			capacity = other.capacity;
-			arr = new T[capacity];
+			this->size = other.size;
+			this->capacity = other.capacity;
+			this->arr = new T[capacity];
 			for (int i = 0; i < size; i++) {
-				arr[i] = other.arr[i];
+				this->arr[i] = other.arr[i];
 			}
 		}
 		return *this;
