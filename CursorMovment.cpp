@@ -327,7 +327,10 @@ int main(int argc, char* argv[]) {
 	cout << "3. Use enter to create a new line" << endl;
 	cout << "4. Use '1' to undo" << endl;
 	cout << "5. Use '2' to redo" << endl;
-	cout << "6. Use 'ESC' to exit" << endl << endl;
+	cout << "6. Use TAB to search and ESC to cancel" << endl;
+	cout << "7. Use '@' for word completion" << endl;
+	cout << "8. Use '*' for sentence completion" << endl;
+	cout << "9. Use 'ESC' to exit" << endl << endl;
 	cout << "Menu:" << endl;
 	cout << "1. Create a new file" << endl;
 	cout << "2. Load a file" << endl;
